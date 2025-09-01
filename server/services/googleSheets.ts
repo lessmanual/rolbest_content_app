@@ -41,19 +41,20 @@ export class GoogleSheetsService {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'A:I', // Updated range to include all columns
+        range: 'Artykuły!A:I', // Get data from "Artykuły" sheet, columns A to I
       });
 
       const rows = response.data.values;
       if (!rows) return null;
 
-      // Get today's date in DD-MM-YYYY format
+      // Get today's date in DD-MM-YYYY format (with dashes to match Excel format)
       const today = new Date();
       const todayStr = today.toLocaleDateString('pl-PL', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
-      });
+      }).replace(/\./g, '-'); // Replace dots with dashes to match Excel format
+
 
       // Find row with today's date and status "Do akceptacji"
       for (let i = 1; i < rows.length; i++) {
@@ -88,7 +89,7 @@ export class GoogleSheetsService {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'A:I',
+        range: 'Artykuły!A:I', // Get data from "Artykuły" sheet, columns A to I
       });
 
       const rows = response.data.values;
@@ -141,7 +142,7 @@ export class GoogleSheetsService {
 
       await this.sheets.spreadsheets.values.update({
         spreadsheetId: this.spreadsheetId,
-        range: `${sheetColumn}${rowNumber}`,
+        range: `Artykuły!${sheetColumn}${rowNumber}`,
         valueInputOption: 'RAW',
         requestBody: {
           values: [[content]],
