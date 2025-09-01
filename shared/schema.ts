@@ -4,7 +4,8 @@ export const postSchema = z.object({
   rowId: z.string(),
   status: z.enum(["Do akceptacji", "Opublikuj", "Opublikowano"]),
   blogTitle: z.string().optional(),
-  blogContent: z.string().optional(),
+  blogContent: z.string().optional(), // Column C - text for editing
+  blogContentHtml: z.string().optional(), // Column D - HTML for preview
   facebookContent: z.string().optional(),
   instagramContent: z.string().optional(),
   imageUrl: z.string().optional(),

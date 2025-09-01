@@ -67,7 +67,8 @@ export class GoogleSheetsService {
             rowId: `ROW_${i + 1}`,
             status: rowStatus as "Do akceptacji",
             blogTitle: row[1] || '', // Column B - tytuł
-            blogContent: row[3] || '', // Column D - Blog Wordpress HTML
+            blogContent: row[2] || '', // Column C - Blog Wordpress text (for editing)
+            blogContentHtml: row[3] || '', // Column D - Blog Wordpress HTML (for preview)
             facebookContent: row[4] || '', // Column E - Post Facebook
             instagramContent: row[5] || '', // Column F - Post Instagram
             imageUrl: row[6] || '', // Column G - Grafika
@@ -104,7 +105,8 @@ export class GoogleSheetsService {
             rowId: `ROW_${i + 1}`,
             status: row[8] as "Opublikowano",
             blogTitle: row[1] || '', // Column B - tytuł
-            blogContent: row[3] || '', // Column D - Blog Wordpress HTML
+            blogContent: row[2] || '', // Column C - Blog Wordpress text (for editing)
+            blogContentHtml: row[3] || '', // Column D - Blog Wordpress HTML (for preview)
             facebookContent: row[4] || '', // Column E - Post Facebook
             instagramContent: row[5] || '', // Column F - Post Instagram
             imageUrl: row[6] || '', // Column G - Grafika
@@ -130,7 +132,8 @@ export class GoogleSheetsService {
       const columnMap: { [key: string]: string } = {
         'publishedDate': 'A', // Column A - data
         'blogTitle': 'B', // Column B - tytuł
-        'blogContent': 'D', // Column D - Blog Wordpress HTML
+        'blogContent': 'C', // Column C - Blog Wordpress text
+        'blogContentHtml': 'D', // Column D - Blog Wordpress HTML
         'facebookContent': 'E', // Column E - Post Facebook
         'instagramContent': 'F', // Column F - Post Instagram
         'imageUrl': 'G', // Column G - Grafika

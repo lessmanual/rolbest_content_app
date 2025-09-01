@@ -222,7 +222,7 @@ export default function Dashboard() {
                           className="text-rolbest-muted-foreground leading-relaxed prose max-w-none" 
                           data-testid="text-blog-content"
                           dangerouslySetInnerHTML={{
-                            __html: currentPost.blogContent || "Treść blog posta zostanie wyświetlona tutaj..."
+                            __html: currentPost.blogContentHtml || "Treść blog posta zostanie wyświetlona tutaj..."
                           }}
                         ></div>
                         <div className="mt-4 pt-3 border-t border-rolbest-border">
