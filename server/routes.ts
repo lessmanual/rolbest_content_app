@@ -9,14 +9,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/post - Get current post with status "DO_SPRAWDZENIA"
   app.get("/api/post", async (req, res) => {
     try {
-      // Try Google Sheets first, fall back to memory storage
-      let post = await googleSheetsService.getCurrentPost();
-      if (!post) {
-        post = await storage.getCurrentPost();
-      }
+      const post = await googleSheetsService.getCurrentPost();
       
       if (!post) {
-        return res.status(404).json({ message: "No post found with status DO_SPRAWDZENIA" });
+        return res.status(404).json({ message: "No post found for today with status 'Do akceptacji'" });
       }
       
       res.json(post);
@@ -31,11 +27,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { rowId, column, content } = updateCellSchema.parse(req.body);
       
-      // Update in Google Sheets and memory storage
-      await Promise.all([
-        googleSheetsService.updateCell(rowId, column, content),
-        storage.updateCell(rowId, column, content)
-      ]);
+      // Update in Google Sheets only
+      await googleSheetsService.updateCell(rowId, column, content);
       
       res.json({ success: true });
     } catch (error) {
@@ -52,11 +45,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { rowId } = publishSchema.parse(req.body);
       
-      // Update status in Google Sheets and memory storage
-      await Promise.all([
-        googleSheetsService.publishPost(rowId),
-        storage.publishPost(rowId)
-      ]);
+      // Update status in Google Sheets only
+      await googleSheetsService.publishPost(rowId);
       
       // Trigger webhook if URL is provided
       const webhookUrl = process.env.MAKE_WEBHOOK_URL;
@@ -86,12 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/posts/published - Get all published posts
   app.get("/api/posts/published", async (req, res) => {
     try {
-      // Try Google Sheets first, fall back to memory storage
-      let posts = await googleSheetsService.getPublishedPosts();
-      if (posts.length === 0) {
-        posts = await storage.getPublishedPosts();
-      }
-      
+      const posts = await googleSheetsService.getPublishedPosts();
       res.json(posts);
     } catch (error) {
       console.error("Error fetching published posts:", error);

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const postSchema = z.object({
   rowId: z.string(),
-  status: z.enum(["DO_SPRAWDZENIA", "OPUBLIKOWANE"]),
+  status: z.enum(["Do akceptacji", "Opublikuj", "Opublikowano"]),
   blogTitle: z.string().optional(),
   blogContent: z.string().optional(),
   facebookContent: z.string().optional(),

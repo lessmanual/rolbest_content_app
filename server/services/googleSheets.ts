@@ -47,13 +47,24 @@ export class GoogleSheetsService {
       const rows = response.data.values;
       if (!rows) return null;
 
-      // Find first row with status "DO_SPRAWDZENIA" in column I (index 8)
+      // Get today's date in DD-MM-YYYY format
+      const today = new Date();
+      const todayStr = today.toLocaleDateString('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      // Find row with today's date and status "Do akceptacji"
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (row[8] === 'DO_SPRAWDZENIA') { // Column I is index 8 (Status)
+        const rowDate = row[0] || ''; // Column A - data
+        const rowStatus = row[8] || ''; // Column I - Status
+        
+        if (rowDate === todayStr && rowStatus === 'Do akceptacji') {
           return {
             rowId: `ROW_${i + 1}`,
-            status: row[8] as "DO_SPRAWDZENIA",
+            status: rowStatus as "Do akceptacji",
             blogTitle: row[1] || '', // Column B - tytuł
             blogContent: row[2] || '', // Column C - Blog Wordpress  
             facebookContent: row[4] || '', // Column E - Post Facebook
@@ -87,10 +98,10 @@ export class GoogleSheetsService {
 
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (row[8] === 'OPUBLIKOWANE') { // Column I is index 8 (Status)
+        if (row[8] === 'Opublikowano') { // Column I is index 8 (Status)
           publishedPosts.push({
             rowId: `ROW_${i + 1}`,
-            status: row[8] as "OPUBLIKOWANE",
+            status: row[8] as "Opublikowano",
             blogTitle: row[1] || '', // Column B - tytuł
             blogContent: row[2] || '', // Column C - Blog Wordpress  
             facebookContent: row[4] || '', // Column E - Post Facebook
@@ -142,8 +153,8 @@ export class GoogleSheetsService {
   }
 
   async publishPost(rowId: string): Promise<void> {
-    await this.updateCell(rowId, 'status', 'OPUBLIKOWANE');
-    await this.updateCell(rowId, 'publishedDate', new Date().toLocaleDateString('pl-PL'));
+    await this.updateCell(rowId, 'status', 'Opublikowano');
+    // publishedDate nie jest aktualizowana, bo data już jest w kolumnie A
   }
 }
 

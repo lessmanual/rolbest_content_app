@@ -150,7 +150,7 @@ export default function Dashboard() {
             <Card>
               <CardContent className="pt-6">
                 <p className="text-center text-rolbest-muted-foreground">
-                  Brak postów do sprawdzenia. Wszystkie posty zostały już opublikowane.
+                  Brak postów na dzisiaj ze statusem "Do akceptacji". Pola są puste, żeby nic się nie pomyliło.
                 </p>
               </CardContent>
             </Card>
