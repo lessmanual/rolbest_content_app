@@ -26,7 +26,7 @@ export class MemStorage implements IStorage {
 
   async getCurrentPost(): Promise<Post | null> {
     // Find first post with DO_SPRAWDZENIA status
-    for (const post of this.posts.values()) {
+    for (const post of Array.from(this.posts.values())) {
       if (post.status === "DO_SPRAWDZENIA") {
         return post;
       }

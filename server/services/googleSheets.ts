@@ -9,13 +9,29 @@ export class GoogleSheetsService {
     const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS;
     this.spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
-    if (credentials) {
-      const auth = new google.auth.GoogleAuth({
-        credentials: JSON.parse(credentials),
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-      });
+    if (credentials && this.spreadsheetId) {
+      try {
+        const parsedCredentials = JSON.parse(credentials);
+        
+        // Validate that required fields exist
+        if (!parsedCredentials.client_email || !parsedCredentials.private_key) {
+          console.error('Google Service Account credentials are missing required fields (client_email, private_key)');
+          return;
+        }
 
-      this.sheets = google.sheets({ version: 'v4', auth });
+        const auth = new google.auth.GoogleAuth({
+          credentials: parsedCredentials,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+
+        this.sheets = google.sheets({ version: 'v4', auth });
+        console.log('Google Sheets service initialized successfully');
+      } catch (error) {
+        console.error('Error initializing Google Sheets service:', error);
+        console.error('Make sure GOOGLE_SERVICE_ACCOUNT_CREDENTIALS is a valid JSON string');
+      }
+    } else {
+      console.log('Google Sheets service not initialized - missing credentials or sheet ID');
     }
   }
 
