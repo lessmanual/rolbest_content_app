@@ -226,7 +226,11 @@ export default function Dashboard() {
                           }}
                         ></div>
                         <div className="mt-4 pt-3 border-t border-rolbest-border">
-                          <span className="text-sm text-rolbest-muted-foreground flex items-center">
+                          <span 
+                            className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
+                            onClick={() => setIsBlogExpanded(true)}
+                            data-testid="button-edit-blog"
+                          >
                             <Edit className="w-4 h-4 mr-2" />
                             Kliknij aby edytować
                           </span>
