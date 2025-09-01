@@ -65,9 +65,42 @@ export default function Dashboard() {
     },
   });
 
+  const [tempBlogContent, setTempBlogContent] = useState("");
+  const [tempBlogTitle, setTempBlogTitle] = useState("");
+
+  // Update temp values when currentPost changes
+  useEffect(() => {
+    if (currentPost) {
+      setTempBlogTitle(currentPost.blogTitle || "");
+      setTempBlogContent(currentPost.blogContentHtml || "");
+    }
+  }, [currentPost]);
+
   const handleContentChange = (column: string, content: string) => {
     if (currentPost) {
       updateCellMutation.mutate({ rowId: currentPost.rowId, column, content });
+    }
+  };
+
+  const handleSaveChanges = () => {
+    if (currentPost) {
+      // Save both title and content
+      updateCellMutation.mutate({ 
+        rowId: currentPost.rowId, 
+        column: "blogTitle", 
+        content: tempBlogTitle 
+      });
+      updateCellMutation.mutate({ 
+        rowId: currentPost.rowId, 
+        column: "blogContentHtml", 
+        content: tempBlogContent 
+      });
+      
+      // Switch back to preview mode
+      setIsBlogExpanded(false);
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/post"] });
     }
   };
 
@@ -188,8 +221,8 @@ export default function Dashboard() {
                           </label>
                           <Input
                             placeholder="Wpisz tytuł blog posta..."
-                            value={currentPost.blogTitle || ""}
-                            onChange={(e) => handleContentChange("blogTitle", e.target.value)}
+                            value={tempBlogTitle}
+                            onChange={(e) => setTempBlogTitle(e.target.value)}
                             data-testid="input-blog-title"
                           />
                         </div>
@@ -200,15 +233,25 @@ export default function Dashboard() {
                           <Textarea
                             placeholder="Napisz treść blog posta..."
                             className="min-h-48 resize-none"
-                            value={currentPost.blogContentHtml || ""}
-                            onChange={(e) => handleContentChange("blogContentHtml", e.target.value)}
+                            value={tempBlogContent}
+                            onChange={(e) => setTempBlogContent(e.target.value)}
                             data-testid="textarea-blog-content"
                           />
                           <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
                             <span>Zalecana długość: 300-800 słów</span>
                             <span data-testid="text-blog-char-count">
-                              {(currentPost.blogContentHtml || "").length} znaków
+                              {tempBlogContent.length} znaków
                             </span>
+                          </div>
+                          <div className="flex justify-end mt-4">
+                            <Button 
+                              onClick={handleSaveChanges}
+                              className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                              data-testid="button-save-blog"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Zapisz zmiany
+                            </Button>
                           </div>
                         </div>
                       </div>
