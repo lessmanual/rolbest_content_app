@@ -122,3 +122,62 @@
     overflow: hidden;
   }
 }
+
+/* HTML Blog Content Styles */
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: var(--rolbest-foreground);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h1 { font-size: 1.875rem; }
+.prose h2 { font-size: 1.5rem; }
+.prose h3 { font-size: 1.25rem; }
+.prose h4 { font-size: 1.125rem; }
+
+.prose p {
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: var(--rolbest-foreground);
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose ul, .prose ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-bottom: 0.5em;
+}
+
+.prose a {
+  color: var(--rolbest-primary);
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: var(--rolbest-primary);
+  opacity: 0.8;
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--rolbest-primary);
+  padding-left: 1em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: var(--rolbest-muted-foreground);
+}
+
+.prose br {
+  display: block;
+  margin: 0.5em 0;
+}

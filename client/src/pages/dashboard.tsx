@@ -218,9 +218,13 @@ export default function Dashboard() {
                         <h4 className="text-xl font-semibold mb-3 text-rolbest-foreground" data-testid="text-blog-title">
                           {currentPost.blogTitle || "Tytuł Blog Posta"}
                         </h4>
-                        <p className="text-rolbest-muted-foreground leading-relaxed" data-testid="text-blog-content">
-                          {currentPost.blogContent || "Treść blog posta zostanie wyświetlona tutaj..."}
-                        </p>
+                        <div 
+                          className="text-rolbest-muted-foreground leading-relaxed prose max-w-none" 
+                          data-testid="text-blog-content"
+                          dangerouslySetInnerHTML={{
+                            __html: currentPost.blogContent || "Treść blog posta zostanie wyświetlona tutaj..."
+                          }}
+                        ></div>
                         <div className="mt-4 pt-3 border-t border-rolbest-border">
                           <span className="text-sm text-rolbest-muted-foreground flex items-center">
                             <Edit className="w-4 h-4 mr-2" />
