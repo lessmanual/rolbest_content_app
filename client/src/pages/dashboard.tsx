@@ -177,6 +177,18 @@ export default function Dashboard() {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Brak daty";
     try {
+      // Handle DD-MM-YYYY format from Google Sheets (column A)
+      if (dateString.includes('-') && dateString.split('-').length === 3) {
+        const [day, month, year] = dateString.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return date.toLocaleDateString("pl-PL", {
+          year: "numeric",
+          month: "long", 
+          day: "numeric",
+        });
+      }
+      
+      // Fallback for standard date formats
       const date = new Date(dateString);
       return date.toLocaleDateString("pl-PL", {
         year: "numeric",
