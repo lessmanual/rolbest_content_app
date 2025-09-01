@@ -41,25 +41,25 @@ export class GoogleSheetsService {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'A:H', // Adjust range based on your sheet structure
+        range: 'A:I', // Updated range to include all columns
       });
 
       const rows = response.data.values;
       if (!rows) return null;
 
-      // Find first row with status "DO_SPRAWDZENIA" in column H
+      // Find first row with status "DO_SPRAWDZENIA" in column I (index 8)
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (row[7] === 'DO_SPRAWDZENIA') { // Column H is index 7
+        if (row[8] === 'DO_SPRAWDZENIA') { // Column I is index 8 (Status)
           return {
             rowId: `ROW_${i + 1}`,
-            status: row[7] as "DO_SPRAWDZENIA",
-            blogTitle: row[0] || '',
-            blogContent: row[1] || '',
-            facebookContent: row[2] || '',
-            instagramContent: row[3] || '',
-            imageUrl: row[4] || '',
-            publishedDate: row[5] || '',
+            status: row[8] as "DO_SPRAWDZENIA",
+            blogTitle: row[1] || '', // Column B - tytuł
+            blogContent: row[2] || '', // Column C - Blog Wordpress  
+            facebookContent: row[4] || '', // Column E - Post Facebook
+            instagramContent: row[5] || '', // Column F - Post Instagram
+            imageUrl: row[6] || '', // Column G - Grafika
+            publishedDate: row[0] || '', // Column A - data
           };
         }
       }
@@ -77,7 +77,7 @@ export class GoogleSheetsService {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'A:H',
+        range: 'A:I',
       });
 
       const rows = response.data.values;
@@ -87,16 +87,16 @@ export class GoogleSheetsService {
 
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (row[7] === 'OPUBLIKOWANE') {
+        if (row[8] === 'OPUBLIKOWANE') { // Column I is index 8 (Status)
           publishedPosts.push({
             rowId: `ROW_${i + 1}`,
-            status: row[7] as "OPUBLIKOWANE",
-            blogTitle: row[0] || '',
-            blogContent: row[1] || '',
-            facebookContent: row[2] || '',
-            instagramContent: row[3] || '',
-            imageUrl: row[4] || '',
-            publishedDate: row[5] || '',
+            status: row[8] as "OPUBLIKOWANE",
+            blogTitle: row[1] || '', // Column B - tytuł
+            blogContent: row[2] || '', // Column C - Blog Wordpress  
+            facebookContent: row[4] || '', // Column E - Post Facebook
+            instagramContent: row[5] || '', // Column F - Post Instagram
+            imageUrl: row[6] || '', // Column G - Grafika
+            publishedDate: row[0] || '', // Column A - data
           });
         }
       }
@@ -116,13 +116,13 @@ export class GoogleSheetsService {
     try {
       const rowNumber = parseInt(rowId.replace('ROW_', ''));
       const columnMap: { [key: string]: string } = {
-        'blogTitle': 'A',
-        'blogContent': 'B',
-        'facebookContent': 'C',
-        'instagramContent': 'D',
-        'imageUrl': 'E',
-        'publishedDate': 'F',
-        'status': 'H'
+        'publishedDate': 'A', // Column A - data
+        'blogTitle': 'B', // Column B - tytuł
+        'blogContent': 'C', // Column C - Blog Wordpress
+        'facebookContent': 'E', // Column E - Post Facebook
+        'instagramContent': 'F', // Column F - Post Instagram
+        'imageUrl': 'G', // Column G - Grafika
+        'status': 'I' // Column I - Status
       };
 
       const sheetColumn = columnMap[column];
@@ -143,7 +143,7 @@ export class GoogleSheetsService {
 
   async publishPost(rowId: string): Promise<void> {
     await this.updateCell(rowId, 'status', 'OPUBLIKOWANE');
-    await this.updateCell(rowId, 'publishedDate', new Date().toISOString());
+    await this.updateCell(rowId, 'publishedDate', new Date().toLocaleDateString('pl-PL'));
   }
 }
 
