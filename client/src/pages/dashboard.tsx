@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBlogExpanded, setIsBlogExpanded] = useState(false);
+  const [isFacebookExpanded, setIsFacebookExpanded] = useState(false);
+  const [isInstagramExpanded, setIsInstagramExpanded] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { toast } = useToast();
 
@@ -116,6 +118,9 @@ export default function Dashboard() {
         content: tempFacebookContent 
       });
       
+      // Switch back to preview mode
+      setIsFacebookExpanded(false);
+      
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
     }
@@ -128,6 +133,9 @@ export default function Dashboard() {
         column: "instagramContent", 
         content: tempInstagramContent 
       });
+      
+      // Switch back to preview mode
+      setIsInstagramExpanded(false);
       
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
@@ -319,66 +327,150 @@ export default function Dashboard() {
                 {/* Facebook Post Editor */}
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                      <h3 className="text-lg font-medium text-rolbest-foreground">Facebook Post</h3>
+                    <div 
+                      className="flex items-center justify-between mb-4 cursor-pointer"
+                      onClick={() => setIsFacebookExpanded(!isFacebookExpanded)}
+                      data-testid="button-toggle-facebook"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                        <h3 className="text-lg font-medium text-rolbest-foreground">
+                          {isFacebookExpanded ? "Edycja Facebook Post" : "Podgląd Facebook Post"}
+                        </h3>
+                      </div>
+                      {isFacebookExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-rolbest-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-rolbest-muted-foreground" />
+                      )}
                     </div>
-                    <Textarea
-                      placeholder="Napisz treść posta na Facebook..."
-                      className="min-h-32 resize-none"
-                      value={tempFacebookContent}
-                      onChange={(e) => setTempFacebookContent(e.target.value)}
-                      data-testid="textarea-facebook-content"
-                    />
-                    <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
-                      <span>Zalecana długość: 40-80 znaków</span>
-                      <span data-testid="text-facebook-char-count">
-                        {tempFacebookContent.length}/280
-                      </span>
-                    </div>
-                    <div className="flex justify-end mt-4">
-                      <Button 
-                        onClick={handleSaveFacebook}
-                        className="bg-rolbest-primary hover:bg-rolbest-primary/90"
-                        data-testid="button-save-facebook"
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        Zapisz zmiany
-                      </Button>
-                    </div>
+                    
+                    {isFacebookExpanded ? (
+                      // Edit Mode
+                      <div className="space-y-4">
+                        <Textarea
+                          placeholder="Napisz treść posta na Facebook..."
+                          className="min-h-32 resize-none"
+                          value={tempFacebookContent}
+                          onChange={(e) => setTempFacebookContent(e.target.value)}
+                          data-testid="textarea-facebook-content"
+                        />
+                        <div className="flex justify-between items-center text-sm text-rolbest-muted-foreground">
+                          <span>Zalecana długość: 40-80 znaków</span>
+                          <span data-testid="text-facebook-char-count">
+                            {tempFacebookContent.length}/280
+                          </span>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button 
+                            onClick={handleSaveFacebook}
+                            className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                            data-testid="button-save-facebook"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Zapisz zmiany
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Preview Mode
+                      <div>
+                        <div 
+                          className="text-rolbest-muted-foreground leading-relaxed min-h-[80px] p-3 border border-rolbest-border rounded-md bg-rolbest-muted/20" 
+                          data-testid="text-facebook-content"
+                        >
+                          {currentPost.facebookContent || "Treść Facebook posta zostanie wyświetlona tutaj..."}
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-rolbest-border">
+                          <span 
+                            className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsFacebookExpanded(true);
+                            }}
+                            data-testid="button-edit-facebook"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Kliknij aby edytować
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
                 {/* Instagram Post Editor */}
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-2 h-2 bg-pink-600 rounded-full mr-3"></div>
-                      <h3 className="text-lg font-medium text-rolbest-foreground">Instagram Post</h3>
+                    <div 
+                      className="flex items-center justify-between mb-4 cursor-pointer"
+                      onClick={() => setIsInstagramExpanded(!isInstagramExpanded)}
+                      data-testid="button-toggle-instagram"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-pink-600 rounded-full mr-3"></div>
+                        <h3 className="text-lg font-medium text-rolbest-foreground">
+                          {isInstagramExpanded ? "Edycja Instagram Post" : "Podgląd Instagram Post"}
+                        </h3>
+                      </div>
+                      {isInstagramExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-rolbest-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-rolbest-muted-foreground" />
+                      )}
                     </div>
-                    <Textarea
-                      placeholder="Napisz treść posta na Instagram..."
-                      className="min-h-32 resize-none"
-                      value={tempInstagramContent}
-                      onChange={(e) => setTempInstagramContent(e.target.value)}
-                      data-testid="textarea-instagram-content"
-                    />
-                    <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
-                      <span>Używaj hashtagów dla lepszego zasięgu</span>
-                      <span data-testid="text-instagram-char-count">
-                        {tempInstagramContent.length}/2200
-                      </span>
-                    </div>
-                    <div className="flex justify-end mt-4">
-                      <Button 
-                        onClick={handleSaveInstagram}
-                        className="bg-rolbest-primary hover:bg-rolbest-primary/90"
-                        data-testid="button-save-instagram"
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        Zapisz zmiany
-                      </Button>
-                    </div>
+                    
+                    {isInstagramExpanded ? (
+                      // Edit Mode
+                      <div className="space-y-4">
+                        <Textarea
+                          placeholder="Napisz treść posta na Instagram..."
+                          className="min-h-32 resize-none"
+                          value={tempInstagramContent}
+                          onChange={(e) => setTempInstagramContent(e.target.value)}
+                          data-testid="textarea-instagram-content"
+                        />
+                        <div className="flex justify-between items-center text-sm text-rolbest-muted-foreground">
+                          <span>Używaj hashtagów dla lepszego zasięgu</span>
+                          <span data-testid="text-instagram-char-count">
+                            {tempInstagramContent.length}/2200
+                          </span>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button 
+                            onClick={handleSaveInstagram}
+                            className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                            data-testid="button-save-instagram"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Zapisz zmiany
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Preview Mode
+                      <div>
+                        <div 
+                          className="text-rolbest-muted-foreground leading-relaxed min-h-[80px] p-3 border border-rolbest-border rounded-md bg-rolbest-muted/20" 
+                          data-testid="text-instagram-content"
+                        >
+                          {currentPost.instagramContent || "Treść Instagram posta zostanie wyświetlona tutaj..."}
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-rolbest-border">
+                          <span 
+                            className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsInstagramExpanded(true);
+                            }}
+                            data-testid="button-edit-instagram"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Kliknij aby edytować
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
