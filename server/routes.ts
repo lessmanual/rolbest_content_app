@@ -52,11 +52,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const webhookUrl = process.env.MAKE_WEBHOOK_URL;
       if (webhookUrl) {
         try {
+          // Extract row number from rowId (ROW_5 -> 5)
+          const rowNumber = parseInt(rowId.replace('ROW_', ''));
+          
           await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rowId })
+            body: JSON.stringify({ 
+              rowId,           // ROW_5 format
+              rowNumber,       // 5 (just the number)
+              status: 'Opublikowano',
+              action: 'publish_post',
+              timestamp: new Date().toISOString()
+            })
           });
+          console.log(`Webhook triggered successfully for ${rowId} (row ${rowNumber})`);
         } catch (webhookError) {
           console.error("Webhook error:", webhookError);
           // Don't fail the request if webhook fails
