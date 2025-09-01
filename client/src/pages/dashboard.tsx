@@ -67,12 +67,16 @@ export default function Dashboard() {
 
   const [tempBlogContent, setTempBlogContent] = useState("");
   const [tempBlogTitle, setTempBlogTitle] = useState("");
+  const [tempFacebookContent, setTempFacebookContent] = useState("");
+  const [tempInstagramContent, setTempInstagramContent] = useState("");
 
   // Update temp values when currentPost changes
   useEffect(() => {
     if (currentPost) {
       setTempBlogTitle(currentPost.blogTitle || "");
       setTempBlogContent(currentPost.blogContentHtml || "");
+      setTempFacebookContent(currentPost.facebookContent || "");
+      setTempInstagramContent(currentPost.instagramContent || "");
     }
   }, [currentPost]);
 
@@ -98,6 +102,32 @@ export default function Dashboard() {
       
       // Switch back to preview mode
       setIsBlogExpanded(false);
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/post"] });
+    }
+  };
+
+  const handleSaveFacebook = () => {
+    if (currentPost) {
+      updateCellMutation.mutate({ 
+        rowId: currentPost.rowId, 
+        column: "facebookContent", 
+        content: tempFacebookContent 
+      });
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/post"] });
+    }
+  };
+
+  const handleSaveInstagram = () => {
+    if (currentPost) {
+      updateCellMutation.mutate({ 
+        rowId: currentPost.rowId, 
+        column: "instagramContent", 
+        content: tempInstagramContent 
+      });
       
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
@@ -296,15 +326,25 @@ export default function Dashboard() {
                     <Textarea
                       placeholder="Napisz treść posta na Facebook..."
                       className="min-h-32 resize-none"
-                      value={currentPost.facebookContent || ""}
-                      onChange={(e) => handleContentChange("facebookContent", e.target.value)}
+                      value={tempFacebookContent}
+                      onChange={(e) => setTempFacebookContent(e.target.value)}
                       data-testid="textarea-facebook-content"
                     />
                     <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
                       <span>Zalecana długość: 40-80 znaków</span>
                       <span data-testid="text-facebook-char-count">
-                        {(currentPost.facebookContent || "").length}/280
+                        {tempFacebookContent.length}/280
                       </span>
+                    </div>
+                    <div className="flex justify-end mt-4">
+                      <Button 
+                        onClick={handleSaveFacebook}
+                        className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                        data-testid="button-save-facebook"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Zapisz zmiany
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -319,15 +359,25 @@ export default function Dashboard() {
                     <Textarea
                       placeholder="Napisz treść posta na Instagram..."
                       className="min-h-32 resize-none"
-                      value={currentPost.instagramContent || ""}
-                      onChange={(e) => handleContentChange("instagramContent", e.target.value)}
+                      value={tempInstagramContent}
+                      onChange={(e) => setTempInstagramContent(e.target.value)}
                       data-testid="textarea-instagram-content"
                     />
                     <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
                       <span>Używaj hashtagów dla lepszego zasięgu</span>
                       <span data-testid="text-instagram-char-count">
-                        {(currentPost.instagramContent || "").length}/2200
+                        {tempInstagramContent.length}/2200
                       </span>
+                    </div>
+                    <div className="flex justify-end mt-4">
+                      <Button 
+                        onClick={handleSaveInstagram}
+                        className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                        data-testid="button-save-instagram"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Zapisz zmiany
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
