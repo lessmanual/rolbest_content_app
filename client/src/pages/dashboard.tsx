@@ -633,7 +633,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {publishedPosts.slice(0, 5).map((post) => (
                 <Card
                   key={post.rowId}
@@ -653,19 +653,52 @@ export default function Dashboard() {
 
                     {post.imageUrl && (
                       <img
-                        src={post.imageUrl}
+                        src={convertGoogleDriveLink(post.imageUrl)}
                         alt="Post thumbnail"
                         className="w-full h-20 object-cover rounded mb-3"
                         data-testid={`img-history-thumbnail-${post.rowId}`}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const fileIdMatch = post.imageUrl.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                          if (fileIdMatch && !target.src.includes('uc?id=')) {
+                            target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+                          }
+                        }}
                       />
                     )}
 
                     <h4 className="font-medium text-rolbest-foreground text-sm mb-2 line-clamp-2" data-testid={`text-history-title-${post.rowId}`}>
                       {post.blogTitle || "Bez tytułu"}
                     </h4>
-                    <p className="text-xs text-rolbest-muted-foreground line-clamp-2" data-testid={`text-history-content-${post.rowId}`}>
-                      {post.blogContent || "Brak treści..."}
-                    </p>
+                    
+                    {/* Blog Content Preview */}
+                    <div className="text-xs text-rolbest-muted-foreground line-clamp-2 mb-2" data-testid={`text-history-content-${post.rowId}`}>
+                      {post.blogContentHtml ? (
+                        <div dangerouslySetInnerHTML={{
+                          __html: post.blogContentHtml.substring(0, 100) + (post.blogContentHtml.length > 100 ? '...' : '')
+                        }} />
+                      ) : (
+                        "Brak treści blog posta..."
+                      )}
+                    </div>
+                    
+                    {/* Social Media Preview */}
+                    {(post.facebookContent || post.instagramContent) && (
+                      <div className="space-y-1">
+                        {post.facebookContent && (
+                          <div className="flex items-center text-xs text-blue-600">
+                            <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                            <span className="line-clamp-1">{post.facebookContent.substring(0, 50)}...</span>
+                          </div>
+                        )}
+                        {post.instagramContent && (
+                          <div className="flex items-center text-xs text-pink-600">
+                            <span className="w-2 h-2 bg-pink-600 rounded-full mr-2"></span>
+                            <span className="line-clamp-1">{post.instagramContent.substring(0, 50)}...</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -693,9 +726,22 @@ export default function Dashboard() {
 
             <div>
               <h4 className="font-medium text-rolbest-foreground mb-2">Tytuł Blog Post</h4>
-              <p className="text-rolbest-foreground" data-testid="text-modal-blog-title">
+              <p className="text-rolbest-foreground mb-4" data-testid="text-modal-blog-title">
                 {selectedPost.blogTitle || "Bez tytułu"}
               </p>
+            </div>
+            
+            <div>
+              <h4 className="font-medium text-rolbest-foreground mb-2">Treść Blog Post</h4>
+              <div className="text-rolbest-muted-foreground bg-rolbest-muted p-3 rounded-lg prose max-w-none" data-testid="text-modal-blog-content">
+                {selectedPost.blogContentHtml ? (
+                  <div dangerouslySetInnerHTML={{
+                    __html: selectedPost.blogContentHtml
+                  }} />
+                ) : (
+                  "Brak treści blog posta"
+                )}
+              </div>
             </div>
 
             <div>
@@ -715,12 +761,28 @@ export default function Dashboard() {
             {selectedPost.imageUrl && (
               <div>
                 <h4 className="font-medium text-rolbest-foreground mb-2">Zdjęcie</h4>
-                <img
-                  src={selectedPost.imageUrl}
-                  alt="Post image"
-                  className="w-full h-auto rounded-lg"
-                  data-testid="img-modal-image"
-                />
+                <div className="relative">
+                  <img
+                    src={convertGoogleDriveLink(selectedPost.imageUrl)}
+                    alt="Post image"
+                    className="w-full h-auto rounded-lg"
+                    data-testid="img-modal-image"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const fileIdMatch = selectedPost.imageUrl.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                      if (fileIdMatch && !target.src.includes('uc?id=')) {
+                        target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+                      }
+                    }}
+                  />
+                  {selectedPost.imageUrl.includes('drive.google.com') && (
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="text-xs">
+                        Google Drive
+                      </Badge>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
