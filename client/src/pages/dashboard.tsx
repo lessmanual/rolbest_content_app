@@ -200,14 +200,14 @@ export default function Dashboard() {
                           <Textarea
                             placeholder="Napisz treść blog posta..."
                             className="min-h-48 resize-none"
-                            value={currentPost.blogContent || ""}
-                            onChange={(e) => handleContentChange("blogContent", e.target.value)}
+                            value={currentPost.blogContentHtml || ""}
+                            onChange={(e) => handleContentChange("blogContentHtml", e.target.value)}
                             data-testid="textarea-blog-content"
                           />
                           <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
                             <span>Zalecana długość: 300-800 słów</span>
                             <span data-testid="text-blog-char-count">
-                              {(currentPost.blogContent || "").length} znaków
+                              {(currentPost.blogContentHtml || "").length} znaków
                             </span>
                           </div>
                         </div>
@@ -228,7 +228,10 @@ export default function Dashboard() {
                         <div className="mt-4 pt-3 border-t border-rolbest-border">
                           <span 
                             className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
-                            onClick={() => setIsBlogExpanded(true)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsBlogExpanded(true);
+                            }}
                             data-testid="button-edit-blog"
                           >
                             <Edit className="w-4 h-4 mr-2" />
