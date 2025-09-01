@@ -16,14 +16,15 @@ const convertGoogleDriveLink = (url: string): string => {
   if (!url) return '';
   
   // Check if it's already a direct link
-  if (url.includes('drive.google.com/uc?id=')) {
+  if (url.includes('drive.google.com/uc?id=') || url.includes('drive.google.com/thumbnail?id=')) {
     return url;
   }
   
   // Extract file ID from various Google Drive URL formats
   const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
   if (fileIdMatch) {
-    return `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+    // Use thumbnail endpoint which works better for public images
+    return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1000`;
   }
   
   // If no match found, return original URL
@@ -44,6 +45,7 @@ export default function Dashboard() {
     queryKey: ["/api/post"],
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
 
   // Fetch published posts
   const { data: publishedPosts = [], isLoading: isLoadingHistory } = useQuery<Post[]>({
@@ -512,10 +514,24 @@ export default function Dashboard() {
                             className="w-full h-full object-cover rounded-lg"
                             data-testid="img-post-preview"
                             onError={(e) => {
-                              // Fallback if converted link doesn't work
+                              // Multiple fallbacks for Google Drive links
                               const target = e.target as HTMLImageElement;
-                              if (!target.src.includes('drive.google.com/uc?id=')) {
+                              const fileIdMatch = currentPost.imageUrl.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                              
+                              if (fileIdMatch && !target.src.includes('uc?id=')) {
+                                // Try uc endpoint first
+                                target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+                              } else if (fileIdMatch && !target.src.includes('original URL')) {
+                                // Try original URL as last resort
                                 target.src = currentPost.imageUrl;
+                                target.setAttribute('data-fallback', 'original URL');
+                              } else {
+                                // Show error state
+                                target.style.display = 'none';
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'text-center text-rolbest-muted-foreground p-4';
+                                errorDiv.innerHTML = '<div class="text-red-500 mb-2">⚠️ Nie można załadować obrazu</div><div class="text-xs">Sprawdź czy plik jest publicznie dostępny</div>';
+                                target.parentNode?.appendChild(errorDiv);
                               }
                             }}
                           />
