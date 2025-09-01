@@ -11,6 +11,25 @@ import Modal from "@/components/ui/modal";
 import { Settings, Upload, Rocket, Save, ExternalLink, Circle, ChevronDown, ChevronUp, Edit } from "lucide-react";
 import type { Post } from "@shared/schema";
 
+// Function to convert Google Drive share link to direct image link
+const convertGoogleDriveLink = (url: string): string => {
+  if (!url) return '';
+  
+  // Check if it's already a direct link
+  if (url.includes('drive.google.com/uc?id=')) {
+    return url;
+  }
+  
+  // Extract file ID from various Google Drive URL formats
+  const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+  if (fileIdMatch) {
+    return `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+  }
+  
+  // If no match found, return original URL
+  return url;
+};
+
 export default function Dashboard() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -486,12 +505,28 @@ export default function Dashboard() {
                     </div>
                     <div className="aspect-square bg-rolbest-muted border-2 border-dashed border-rolbest-border rounded-lg flex items-center justify-center mb-4">
                       {currentPost.imageUrl ? (
-                        <img
-                          src={currentPost.imageUrl}
-                          alt="Post image"
-                          className="w-full h-full object-cover rounded-lg"
-                          data-testid="img-post-preview"
-                        />
+                        <div className="w-full h-full relative">
+                          <img
+                            src={convertGoogleDriveLink(currentPost.imageUrl)}
+                            alt="Post image"
+                            className="w-full h-full object-cover rounded-lg"
+                            data-testid="img-post-preview"
+                            onError={(e) => {
+                              // Fallback if converted link doesn't work
+                              const target = e.target as HTMLImageElement;
+                              if (!target.src.includes('drive.google.com/uc?id=')) {
+                                target.src = currentPost.imageUrl;
+                              }
+                            }}
+                          />
+                          {currentPost.imageUrl.includes('drive.google.com') && (
+                            <div className="absolute top-2 right-2">
+                              <Badge variant="secondary" className="text-xs">
+                                Google Drive
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div className="text-center text-rolbest-muted-foreground">
                           <Upload className="w-8 h-8 mx-auto mb-2" />
