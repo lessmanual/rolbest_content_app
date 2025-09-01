@@ -5,14 +5,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Modal from "@/components/ui/modal";
-import { Settings, Upload, Rocket, Save, ExternalLink, Circle } from "lucide-react";
+import { Settings, Upload, Rocket, Save, ExternalLink, Circle, ChevronDown, ChevronUp, Edit } from "lucide-react";
 import type { Post } from "@shared/schema";
 
 export default function Dashboard() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBlogExpanded, setIsBlogExpanded] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { toast } = useToast();
 
   // Fetch current post
@@ -107,7 +110,12 @@ export default function Dashboard() {
                 <Circle className="w-3 h-3 text-green-500 mr-2 fill-current" />
                 Połączono z Google Sheets
               </div>
-              <Button variant="ghost" size="sm" data-testid="button-settings">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsSettingsOpen(true)}
+                data-testid="button-settings"
+              >
                 <Settings className="w-4 h-4" />
               </Button>
             </div>
@@ -150,21 +158,77 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column - Content Editing */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Blog Preview */}
+                {/* Blog Editor/Preview */}
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-2 h-2 bg-rolbest-primary rounded-full mr-3"></div>
-                      <h3 className="text-lg font-medium text-rolbest-foreground">Podgląd Blog Post</h3>
+                    <div 
+                      className="flex items-center justify-between mb-4 cursor-pointer"
+                      onClick={() => setIsBlogExpanded(!isBlogExpanded)}
+                      data-testid="button-toggle-blog"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-rolbest-primary rounded-full mr-3"></div>
+                        <h3 className="text-lg font-medium text-rolbest-foreground">
+                          {isBlogExpanded ? "Edycja Blog Post" : "Podgląd Blog Post"}
+                        </h3>
+                      </div>
+                      {isBlogExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-rolbest-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-rolbest-muted-foreground" />
+                      )}
                     </div>
-                    <div className="prose max-w-none">
-                      <h4 className="text-xl font-semibold mb-3 text-rolbest-foreground" data-testid="text-blog-title">
-                        {currentPost.blogTitle || "Tytuł Blog Posta"}
-                      </h4>
-                      <p className="text-rolbest-muted-foreground leading-relaxed" data-testid="text-blog-content">
-                        {currentPost.blogContent || "Treść blog posta zostanie wyświetlona tutaj..."}
-                      </p>
-                    </div>
+                    
+                    {isBlogExpanded ? (
+                      // Edit Mode
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-rolbest-foreground mb-2 block">
+                            Tytuł Blog Post
+                          </label>
+                          <Input
+                            placeholder="Wpisz tytuł blog posta..."
+                            value={currentPost.blogTitle || ""}
+                            onChange={(e) => handleContentChange("blogTitle", e.target.value)}
+                            data-testid="input-blog-title"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-rolbest-foreground mb-2 block">
+                            Treść Blog Post
+                          </label>
+                          <Textarea
+                            placeholder="Napisz treść blog posta..."
+                            className="min-h-48 resize-none"
+                            value={currentPost.blogContent || ""}
+                            onChange={(e) => handleContentChange("blogContent", e.target.value)}
+                            data-testid="textarea-blog-content"
+                          />
+                          <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
+                            <span>Zalecana długość: 300-800 słów</span>
+                            <span data-testid="text-blog-char-count">
+                              {(currentPost.blogContent || "").length} znaków
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Preview Mode
+                      <div className="prose max-w-none">
+                        <h4 className="text-xl font-semibold mb-3 text-rolbest-foreground" data-testid="text-blog-title">
+                          {currentPost.blogTitle || "Tytuł Blog Posta"}
+                        </h4>
+                        <p className="text-rolbest-muted-foreground leading-relaxed" data-testid="text-blog-content">
+                          {currentPost.blogContent || "Treść blog posta zostanie wyświetlona tutaj..."}
+                        </p>
+                        <div className="mt-4 pt-3 border-t border-rolbest-border">
+                          <span className="text-sm text-rolbest-muted-foreground flex items-center">
+                            <Edit className="w-4 h-4 mr-2" />
+                            Kliknij aby edytować
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -414,6 +478,65 @@ export default function Dashboard() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Settings Modal */}
+      <Modal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        title="Ustawienia Aplikacji"
+      >
+        <div className="space-y-6">
+          <div>
+            <h4 className="font-medium text-rolbest-foreground mb-4">Połączenie z Google Sheets</h4>
+            <div className="bg-rolbest-muted p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-rolbest-foreground">Status połączenia</p>
+                  <p className="text-xs text-rolbest-muted-foreground">Automatyczne synchronizowanie z arkuszem</p>
+                </div>
+                <div className="flex items-center text-green-600">
+                  <Circle className="w-3 h-3 mr-2 fill-current" />
+                  <span className="text-sm">Połączono</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-rolbest-foreground mb-4">Webhook Make.com</h4>
+            <div className="bg-rolbest-muted p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-rolbest-foreground">Publikacja automatyczna</p>
+                  <p className="text-xs text-rolbest-muted-foreground">Uruchamianie po kliknięciu "Opublikuj"</p>
+                </div>
+                <div className="flex items-center text-green-600">
+                  <Circle className="w-3 h-3 mr-2 fill-current" />
+                  <span className="text-sm">Aktywny</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-rolbest-foreground mb-4">Informacje o aplikacji</h4>
+            <div className="bg-rolbest-muted p-4 rounded-lg space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-rolbest-muted-foreground">Wersja aplikacji:</span>
+                <span className="text-sm text-rolbest-foreground">1.0.0</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-rolbest-muted-foreground">Ostatnia aktualizacja:</span>
+                <span className="text-sm text-rolbest-foreground">Dzisiaj</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-rolbest-muted-foreground">Panel dla:</span>
+                <span className="text-sm text-rolbest-foreground">ROLBEST</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </Modal>
     </div>
   );
