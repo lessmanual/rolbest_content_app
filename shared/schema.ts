@@ -20,6 +20,7 @@ export const updateCellSchema = z.object({
 
 export const publishSchema = z.object({
   rowId: z.string(),
+  publishType: z.enum(["social-media", "wordpress"]),
 });
 
 export type Post = z.infer<typeof postSchema>;

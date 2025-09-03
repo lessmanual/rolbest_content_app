@@ -66,15 +66,15 @@ export default function Dashboard() {
     },
   });
 
-  // Publish post mutation
-  const publishMutation = useMutation({
+  // Publish post mutation for Social Media
+  const publishSocialMutation = useMutation({
     mutationFn: async (rowId: string) => {
-      return apiRequest("POST", "/api/publish", { rowId });
+      return apiRequest("POST", "/api/publish", { rowId, publishType: "social-media" });
     },
     onSuccess: () => {
       toast({
         title: "Sukces",
-        description: "Post został opublikowany pomyślnie",
+        description: "Post został opublikowany na Social Media",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/published"] });
@@ -82,7 +82,29 @@ export default function Dashboard() {
     onError: () => {
       toast({
         title: "Błąd",
-        description: "Nie udało się opublikować posta",
+        description: "Nie udało się opublikować na Social Media",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Publish post mutation for WordPress
+  const publishWordPressMutation = useMutation({
+    mutationFn: async (rowId: string) => {
+      return apiRequest("POST", "/api/publish", { rowId, publishType: "wordpress" });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sukces",
+        description: "Post został opublikowany na WordPress",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/post"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/published"] });
+    },
+    onError: () => {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się opublikować na WordPress",
         variant: "destructive",
       });
     },
@@ -163,9 +185,15 @@ export default function Dashboard() {
     }
   };
 
-  const handlePublish = () => {
+  const handlePublishSocial = () => {
     if (currentPost) {
-      publishMutation.mutate(currentPost.rowId);
+      publishSocialMutation.mutate(currentPost.rowId);
+    }
+  };
+
+  const handlePublishWordPress = () => {
+    if (currentPost) {
+      publishWordPressMutation.mutate(currentPost.rowId);
     }
   };
 
@@ -229,7 +257,7 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Loading indicator */}
-        {(updateCellMutation.isPending || publishMutation.isPending) && (
+        {(updateCellMutation.isPending || publishSocialMutation.isPending || publishWordPressMutation.isPending) && (
           <div className="fixed top-4 right-4 bg-rolbest-primary text-white px-4 py-2 rounded-lg shadow-lg z-50">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -528,14 +556,14 @@ export default function Dashboard() {
                             onError={(e) => {
                               // Multiple fallbacks for Google Drive links
                               const target = e.target as HTMLImageElement;
-                              const fileIdMatch = currentPost.imageUrl.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                              const fileIdMatch = currentPost.imageUrl?.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
                               
                               if (fileIdMatch && !target.src.includes('uc?id=')) {
                                 // Try uc endpoint first
                                 target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
                               } else if (fileIdMatch && !target.src.includes('original URL')) {
                                 // Try original URL as last resort
-                                target.src = currentPost.imageUrl;
+                                target.src = currentPost.imageUrl || '';
                                 target.setAttribute('data-fallback', 'original URL');
                               } else {
                                 // Show error state
@@ -588,12 +616,12 @@ export default function Dashboard() {
                       </div>
 
                       <Button
-                        className="w-full bg-rolbest-primary hover:bg-rolbest-primary/90 text-white"
-                        onClick={handlePublish}
-                        disabled={publishMutation.isPending}
-                        data-testid="button-publish"
+                        className="w-full bg-blue-600 hover:bg-blue-600/90 text-white"
+                        onClick={handlePublishSocial}
+                        disabled={publishSocialMutation.isPending}
+                        data-testid="button-publish-social"
                       >
-                        {publishMutation.isPending ? (
+                        {publishSocialMutation.isPending ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                             Publikowanie...
@@ -601,7 +629,26 @@ export default function Dashboard() {
                         ) : (
                           <>
                             <Rocket className="w-4 h-4 mr-2" />
-                            Opublikuj Teraz
+                            Opublikuj na Social Media
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        className="w-full bg-orange-600 hover:bg-orange-600/90 text-white"
+                        onClick={handlePublishWordPress}
+                        disabled={publishWordPressMutation.isPending}
+                        data-testid="button-publish-wordpress"
+                      >
+                        {publishWordPressMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                            Publikowanie...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Opublikuj na WordPress
                           </>
                         )}
                       </Button>
@@ -671,7 +718,7 @@ export default function Dashboard() {
                         data-testid={`img-history-thumbnail-${post.rowId}`}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          const fileIdMatch = post.imageUrl.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                          const fileIdMatch = post.imageUrl?.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
                           if (fileIdMatch && !target.src.includes('uc?id=')) {
                             target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
                           }
@@ -781,7 +828,7 @@ export default function Dashboard() {
                     data-testid="img-modal-image"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      const fileIdMatch = selectedPost.imageUrl.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                      const fileIdMatch = selectedPost.imageUrl?.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
                       if (fileIdMatch && !target.src.includes('uc?id=')) {
                         target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
                       }

@@ -43,33 +43,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/publish - Publish post via webhook
   app.post("/api/publish", async (req, res) => {
     try {
-      const { rowId } = publishSchema.parse(req.body);
+      const { rowId, publishType } = publishSchema.parse(req.body);
       
       // Update status in Google Sheets only
       await googleSheetsService.publishPost(rowId);
       
-      // Trigger webhook if URL is provided
-      const webhookUrl = process.env.MAKE_WEBHOOK_URL;
-      if (webhookUrl) {
-        try {
-          // Extract row number from rowId (ROW_5 -> 5)
-          const rowNumber = parseInt(rowId.replace('ROW_', ''));
-          
-          await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              rowId,           // ROW_5 format
-              rowNumber,       // 5 (just the number)
-              status: 'Opublikowano',
-              action: 'publish_post',
-              timestamp: new Date().toISOString()
-            })
-          });
-          console.log(`Webhook triggered successfully for ${rowId} (row ${rowNumber})`);
-        } catch (webhookError) {
-          console.error("Webhook error:", webhookError);
-          // Don't fail the request if webhook fails
+      // Trigger appropriate webhook based on publish type
+      if (publishType === "social-media") {
+        const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+        if (webhookUrl) {
+          try {
+            // Extract row number from rowId (ROW_5 -> 5)
+            const rowNumber = parseInt(rowId.replace('ROW_', ''));
+            
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                rowId,           // ROW_5 format
+                rowNumber,       // 5 (just the number)
+                status: 'Opublikowano',
+                action: 'publish_post',
+                timestamp: new Date().toISOString()
+              })
+            });
+            console.log(`Social media webhook triggered successfully for ${rowId} (row ${rowNumber})`);
+          } catch (webhookError) {
+            console.error("Social media webhook error:", webhookError);
+            // Don't fail the request if webhook fails
+          }
+        }
+      } else if (publishType === "wordpress") {
+        const wordpressWebhookUrl = process.env.WORDPRESS_WEBHOOK_URL;
+        const wordpressUsername = process.env.WORDPRESS_WEBHOOK_USERNAME;
+        const wordpressPassword = process.env.WORDPRESS_WEBHOOK_PASSWORD;
+        
+        if (wordpressWebhookUrl && wordpressUsername && wordpressPassword) {
+          try {
+            // Extract row number from rowId (ROW_5 -> 5)
+            const rowNumber = parseInt(rowId.replace('ROW_', ''));
+            
+            // Create basic auth header
+            const basicAuth = Buffer.from(`${wordpressUsername}:${wordpressPassword}`).toString('base64');
+            
+            await fetch(wordpressWebhookUrl, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${basicAuth}`
+              },
+              body: JSON.stringify({ 
+                rowId,           // ROW_5 format
+                rowNumber,       // 5 (just the number)
+                status: 'Opublikowano',
+                action: 'publish_wordpress',
+                timestamp: new Date().toISOString()
+              })
+            });
+            console.log(`WordPress webhook triggered successfully for ${rowId} (row ${rowNumber})`);
+          } catch (webhookError) {
+            console.error("WordPress webhook error:", webhookError);
+            // Don't fail the request if webhook fails
+          }
+        } else {
+          console.log("WordPress webhook not configured - missing URL or credentials");
         }
       }
       
