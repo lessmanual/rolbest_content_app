@@ -297,7 +297,7 @@ export default function Dashboard() {
             <Card>
               <CardContent className="pt-6">
                 <p className="text-center text-rolbest-muted-foreground">
-                  Brak postów na dzisiaj ze statusem "Do akceptacji". Pola są puste, żeby nic się nie pomyliło.
+                  Brak postów na dzisiaj ze statusem "Do akceptacji"
                 </p>
               </CardContent>
             </Card>
