@@ -45,8 +45,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { rowId, publishType } = publishSchema.parse(req.body);
       
-      // Update status in Google Sheets only
-      await googleSheetsService.publishPost(rowId);
+      // Update appropriate status in Google Sheets based on publish type
+      if (publishType === "social-media") {
+        await googleSheetsService.publishSocialMedia(rowId);
+      } else if (publishType === "wordpress") {
+        await googleSheetsService.publishWordPress(rowId);
+      }
       
       // Trigger appropriate webhook based on publish type
       if (publishType === "social-media") {

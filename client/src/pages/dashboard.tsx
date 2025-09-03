@@ -294,14 +294,14 @@ export default function Dashboard() {
                 <Card>
                   <CardContent className="pt-6">
                     <div 
-                      className="flex items-center justify-between mb-4 cursor-pointer"
-                      onClick={() => setIsBlogExpanded(!isBlogExpanded)}
+                      className={`flex items-center justify-between mb-4 ${currentPost.statusWP === 'Opublikowano' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      onClick={() => currentPost.statusWP !== 'Opublikowano' && setIsBlogExpanded(!isBlogExpanded)}
                       data-testid="button-toggle-blog"
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 bg-rolbest-primary rounded-full mr-3"></div>
-                        <h3 className="text-lg font-medium text-rolbest-foreground">
-                          {isBlogExpanded ? "Edycja Blog Post" : "Podgląd Blog Post"}
+                        <h3 className={`text-lg font-medium ${currentPost.statusWP === 'Opublikowano' ? 'text-rolbest-muted-foreground' : 'text-rolbest-foreground'}`}>
+                          {currentPost.statusWP === 'Opublikowano' ? 'Blog Post (Opublikowany)' : (isBlogExpanded ? "Edycja Blog Post" : "Podgląd Blog Post")}
                         </h3>
                       </div>
                       {isBlogExpanded ? (
@@ -322,6 +322,7 @@ export default function Dashboard() {
                             placeholder="Wpisz tytuł blog posta..."
                             value={tempBlogTitle}
                             onChange={(e) => setTempBlogTitle(e.target.value)}
+                            disabled={currentPost.statusWP === 'Opublikowano'}
                             data-testid="input-blog-title"
                           />
                         </div>
@@ -334,6 +335,7 @@ export default function Dashboard() {
                             className="min-h-48 resize-none"
                             value={tempBlogContent}
                             onChange={(e) => setTempBlogContent(e.target.value)}
+                            disabled={currentPost.statusWP === 'Opublikowano'}
                             data-testid="textarea-blog-content"
                           />
                           <div className="flex justify-between items-center mt-2 text-sm text-rolbest-muted-foreground">
@@ -346,10 +348,11 @@ export default function Dashboard() {
                             <Button 
                               onClick={handleSaveChanges}
                               className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                              disabled={currentPost.statusWP === 'Opublikowano'}
                               data-testid="button-save-blog"
                             >
                               <Save className="w-4 h-4 mr-2" />
-                              Zapisz zmiany
+                              {currentPost.statusWP === 'Opublikowano' ? 'Opublikowany' : 'Zapisz zmiany'}
                             </Button>
                           </div>
                         </div>
@@ -367,19 +370,29 @@ export default function Dashboard() {
                             __html: currentPost.blogContentHtml || "Treść blog posta zostanie wyświetlona tutaj..."
                           }}
                         ></div>
-                        <div className="mt-4 pt-3 border-t border-rolbest-border">
-                          <span 
-                            className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setIsBlogExpanded(true);
-                            }}
-                            data-testid="button-edit-blog"
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Kliknij aby edytować
-                          </span>
-                        </div>
+                        {currentPost.statusWP !== 'Opublikowano' && (
+                          <div className="mt-4 pt-3 border-t border-rolbest-border">
+                            <span 
+                              className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsBlogExpanded(true);
+                              }}
+                              data-testid="button-edit-blog"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Kliknij aby edytować
+                            </span>
+                          </div>
+                        )}
+                        {currentPost.statusWP === 'Opublikowano' && (
+                          <div className="mt-4 pt-3 border-t border-rolbest-border">
+                            <span className="text-sm text-rolbest-muted-foreground flex items-center">
+                              <Edit className="w-4 h-4 mr-2" />
+                              Post został opublikowany na WordPress
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -389,14 +402,14 @@ export default function Dashboard() {
                 <Card>
                   <CardContent className="pt-6">
                     <div 
-                      className="flex items-center justify-between mb-4 cursor-pointer"
-                      onClick={() => setIsFacebookExpanded(!isFacebookExpanded)}
+                      className={`flex items-center justify-between mb-4 ${currentPost.statusSM === 'Opublikowano' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      onClick={() => currentPost.statusSM !== 'Opublikowano' && setIsFacebookExpanded(!isFacebookExpanded)}
                       data-testid="button-toggle-facebook"
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                        <h3 className="text-lg font-medium text-rolbest-foreground">
-                          {isFacebookExpanded ? "Edycja Facebook Post" : "Podgląd Facebook Post"}
+                        <h3 className={`text-lg font-medium ${currentPost.statusSM === 'Opublikowano' ? 'text-rolbest-muted-foreground' : 'text-rolbest-foreground'}`}>
+                          {currentPost.statusSM === 'Opublikowano' ? 'Facebook Post (Opublikowany)' : (isFacebookExpanded ? "Edycja Facebook Post" : "Podgląd Facebook Post")}
                         </h3>
                       </div>
                       {isFacebookExpanded ? (
@@ -414,6 +427,7 @@ export default function Dashboard() {
                           className="min-h-32 resize-none"
                           value={tempFacebookContent}
                           onChange={(e) => setTempFacebookContent(e.target.value)}
+                          disabled={currentPost.statusSM === 'Opublikowano'}
                           data-testid="textarea-facebook-content"
                         />
                         <div className="flex justify-between items-center text-sm text-rolbest-muted-foreground">
@@ -426,10 +440,11 @@ export default function Dashboard() {
                           <Button 
                             onClick={handleSaveFacebook}
                             className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                            disabled={currentPost.statusSM === 'Opublikowano'}
                             data-testid="button-save-facebook"
                           >
                             <Save className="w-4 h-4 mr-2" />
-                            Zapisz zmiany
+                            {currentPost.statusSM === 'Opublikowano' ? 'Opublikowany' : 'Zapisz zmiany'}
                           </Button>
                         </div>
                       </div>
@@ -442,19 +457,29 @@ export default function Dashboard() {
                         >
                           {currentPost.facebookContent || "Treść Facebook posta zostanie wyświetlona tutaj..."}
                         </div>
-                        <div className="mt-4 pt-3 border-t border-rolbest-border">
-                          <span 
-                            className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setIsFacebookExpanded(true);
-                            }}
-                            data-testid="button-edit-facebook"
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Kliknij aby edytować
-                          </span>
-                        </div>
+                        {currentPost.statusSM !== 'Opublikowano' && (
+                          <div className="mt-4 pt-3 border-t border-rolbest-border">
+                            <span 
+                              className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsFacebookExpanded(true);
+                              }}
+                              data-testid="button-edit-facebook"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Kliknij aby edytować
+                            </span>
+                          </div>
+                        )}
+                        {currentPost.statusSM === 'Opublikowano' && (
+                          <div className="mt-4 pt-3 border-t border-rolbest-border">
+                            <span className="text-sm text-rolbest-muted-foreground flex items-center">
+                              <Edit className="w-4 h-4 mr-2" />
+                              Post został opublikowany na Social Media
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -464,14 +489,14 @@ export default function Dashboard() {
                 <Card>
                   <CardContent className="pt-6">
                     <div 
-                      className="flex items-center justify-between mb-4 cursor-pointer"
-                      onClick={() => setIsInstagramExpanded(!isInstagramExpanded)}
+                      className={`flex items-center justify-between mb-4 ${currentPost.statusSM === 'Opublikowano' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      onClick={() => currentPost.statusSM !== 'Opublikowano' && setIsInstagramExpanded(!isInstagramExpanded)}
                       data-testid="button-toggle-instagram"
                     >
                       <div className="flex items-center">
                         <div className="w-2 h-2 bg-pink-600 rounded-full mr-3"></div>
-                        <h3 className="text-lg font-medium text-rolbest-foreground">
-                          {isInstagramExpanded ? "Edycja Instagram Post" : "Podgląd Instagram Post"}
+                        <h3 className={`text-lg font-medium ${currentPost.statusSM === 'Opublikowano' ? 'text-rolbest-muted-foreground' : 'text-rolbest-foreground'}`}>
+                          {currentPost.statusSM === 'Opublikowano' ? 'Instagram Post (Opublikowany)' : (isInstagramExpanded ? "Edycja Instagram Post" : "Podgląd Instagram Post")}
                         </h3>
                       </div>
                       {isInstagramExpanded ? (
@@ -489,6 +514,7 @@ export default function Dashboard() {
                           className="min-h-32 resize-none"
                           value={tempInstagramContent}
                           onChange={(e) => setTempInstagramContent(e.target.value)}
+                          disabled={currentPost.statusSM === 'Opublikowano'}
                           data-testid="textarea-instagram-content"
                         />
                         <div className="flex justify-between items-center text-sm text-rolbest-muted-foreground">
@@ -501,10 +527,11 @@ export default function Dashboard() {
                           <Button 
                             onClick={handleSaveInstagram}
                             className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                            disabled={currentPost.statusSM === 'Opublikowano'}
                             data-testid="button-save-instagram"
                           >
                             <Save className="w-4 h-4 mr-2" />
-                            Zapisz zmiany
+                            {currentPost.statusSM === 'Opublikowano' ? 'Opublikowany' : 'Zapisz zmiany'}
                           </Button>
                         </div>
                       </div>
@@ -517,19 +544,29 @@ export default function Dashboard() {
                         >
                           {currentPost.instagramContent || "Treść Instagram posta zostanie wyświetlona tutaj..."}
                         </div>
-                        <div className="mt-4 pt-3 border-t border-rolbest-border">
-                          <span 
-                            className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setIsInstagramExpanded(true);
-                            }}
-                            data-testid="button-edit-instagram"
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Kliknij aby edytować
-                          </span>
-                        </div>
+                        {currentPost.statusSM !== 'Opublikowano' && (
+                          <div className="mt-4 pt-3 border-t border-rolbest-border">
+                            <span 
+                              className="text-sm text-rolbest-muted-foreground flex items-center cursor-pointer hover:text-rolbest-primary transition-colors"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsInstagramExpanded(true);
+                              }}
+                              data-testid="button-edit-instagram"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Kliknij aby edytować
+                            </span>
+                          </div>
+                        )}
+                        {currentPost.statusSM === 'Opublikowano' && (
+                          <div className="mt-4 pt-3 border-t border-rolbest-border">
+                            <span className="text-sm text-rolbest-muted-foreground flex items-center">
+                              <Edit className="w-4 h-4 mr-2" />
+                              Post został opublikowany na Social Media
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -602,9 +639,16 @@ export default function Dashboard() {
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-3 bg-rolbest-muted rounded-lg">
-                        <span className="text-sm text-rolbest-muted-foreground">Status:</span>
-                        <Badge variant="secondary" data-testid="badge-post-status">
-                          {currentPost.status}
+                        <span className="text-sm text-rolbest-muted-foreground">WordPress:</span>
+                        <Badge variant={currentPost.statusWP === 'Opublikowano' ? 'default' : 'secondary'} data-testid="badge-wordpress-status">
+                          {currentPost.statusWP || 'Niepublikowane'}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-rolbest-muted rounded-lg">
+                        <span className="text-sm text-rolbest-muted-foreground">Social Media:</span>
+                        <Badge variant={currentPost.statusSM === 'Opublikowano' ? 'default' : 'secondary'} data-testid="badge-social-status">
+                          {currentPost.statusSM || 'Niepublikowane'}
                         </Badge>
                       </div>
 
@@ -616,15 +660,20 @@ export default function Dashboard() {
                       </div>
 
                       <Button
-                        className="w-full bg-blue-600 hover:bg-blue-600/90 text-white"
+                        className={currentPost.statusSM === 'Opublikowano' ? "w-full bg-green-600 hover:bg-green-600/90 text-white" : "w-full bg-blue-600 hover:bg-blue-600/90 text-white"}
                         onClick={handlePublishSocial}
-                        disabled={publishSocialMutation.isPending}
+                        disabled={publishSocialMutation.isPending || currentPost.statusSM === 'Opublikowano'}
                         data-testid="button-publish-social"
                       >
                         {publishSocialMutation.isPending ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                             Publikowanie...
+                          </>
+                        ) : currentPost.statusSM === 'Opublikowano' ? (
+                          <>
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Opublikowano Posty na Social Media
                           </>
                         ) : (
                           <>
@@ -635,15 +684,20 @@ export default function Dashboard() {
                       </Button>
 
                       <Button
-                        className="w-full bg-orange-600 hover:bg-orange-600/90 text-white"
+                        className={currentPost.statusWP === 'Opublikowano' ? "w-full bg-green-600 hover:bg-green-600/90 text-white" : "w-full bg-orange-600 hover:bg-orange-600/90 text-white"}
                         onClick={handlePublishWordPress}
-                        disabled={publishWordPressMutation.isPending}
+                        disabled={publishWordPressMutation.isPending || currentPost.statusWP === 'Opublikowano'}
                         data-testid="button-publish-wordpress"
                       >
                         {publishWordPressMutation.isPending ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                             Publikowanie...
+                          </>
+                        ) : currentPost.statusWP === 'Opublikowano' ? (
+                          <>
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Opublikowano Post na Bloga
                           </>
                         ) : (
                           <>

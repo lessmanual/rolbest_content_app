@@ -10,6 +10,8 @@ export const postSchema = z.object({
   instagramContent: z.string().optional(),
   imageUrl: z.string().optional(),
   publishedDate: z.string().optional(),
+  statusWP: z.string().optional(), // Column I - WordPress status
+  statusSM: z.string().optional(), // Column J - Social Media status
 });
 
 export const updateCellSchema = z.object({

@@ -41,7 +41,7 @@ export class GoogleSheetsService {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Artykuły!A:I', // Get data from "Artykuły" sheet, columns A to I
+        range: 'Artykuły!A:J', // Get data from "Artykuły" sheet, columns A to J
       });
 
       const rows = response.data.values;
@@ -56,16 +56,15 @@ export class GoogleSheetsService {
       }).replace(/\./g, '-'); // Replace dots with dashes to match Excel format
 
 
-      // Find row with today's date and status "Do akceptacji"
+      // Find row with today's date (no longer filtering by main status)
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         const rowDate = row[0] || ''; // Column A - data
-        const rowStatus = row[8] || ''; // Column I - Status
         
-        if (rowDate === todayStr && rowStatus === 'Do akceptacji') {
+        if (rowDate === todayStr) {
           return {
             rowId: `ROW_${i + 1}`,
-            status: rowStatus as "Do akceptacji",
+            status: "Do akceptacji", // Default status since we show all posts
             blogTitle: row[1] || '', // Column B - tytuł
             blogContent: row[2] || '', // Column C - Blog Wordpress text (for editing)
             blogContentHtml: row[3] || '', // Column D - Blog Wordpress HTML (for preview)
@@ -73,6 +72,8 @@ export class GoogleSheetsService {
             instagramContent: row[5] || '', // Column F - Post Instagram
             imageUrl: row[6] || '', // Column G - Grafika
             publishedDate: row[0] || '', // Column A - data
+            statusWP: row[8] || '', // Column I - WordPress status
+            statusSM: row[9] || '', // Column J - Social Media status
           };
         }
       }
@@ -90,7 +91,7 @@ export class GoogleSheetsService {
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Artykuły!A:I', // Get data from "Artykuły" sheet, columns A to I
+        range: 'Artykuły!A:J', // Get data from "Artykuły" sheet, columns A to J
       });
 
       const rows = response.data.values;
@@ -100,10 +101,10 @@ export class GoogleSheetsService {
 
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (row[8] === 'Opublikowano') { // Column I is index 8 (Status)
+        if (row[7] === 'Opublikowano') { // Column H is index 7 (Main Status)
           publishedPosts.push({
             rowId: `ROW_${i + 1}`,
-            status: row[8] as "Opublikowano",
+            status: row[7] as "Opublikowano",
             blogTitle: row[1] || '', // Column B - tytuł
             blogContent: row[2] || '', // Column C - Blog Wordpress text (for editing)
             blogContentHtml: row[3] || '', // Column D - Blog Wordpress HTML (for preview)
@@ -111,6 +112,8 @@ export class GoogleSheetsService {
             instagramContent: row[5] || '', // Column F - Post Instagram
             imageUrl: row[6] || '', // Column G - Grafika
             publishedDate: row[0] || '', // Column A - data
+            statusWP: row[8] || '', // Column I - WordPress status
+            statusSM: row[9] || '', // Column J - Social Media status
           });
         }
       }
@@ -137,7 +140,9 @@ export class GoogleSheetsService {
         'facebookContent': 'E', // Column E - Post Facebook
         'instagramContent': 'F', // Column F - Post Instagram
         'imageUrl': 'G', // Column G - Grafika
-        'status': 'I' // Column I - Status
+        'status': 'H', // Column H - Main Status
+        'statusWP': 'I', // Column I - WordPress status
+        'statusSM': 'J' // Column J - Social Media status
       };
 
       const sheetColumn = columnMap[column];
@@ -159,6 +164,14 @@ export class GoogleSheetsService {
   async publishPost(rowId: string): Promise<void> {
     await this.updateCell(rowId, 'status', 'Opublikowano');
     // publishedDate nie jest aktualizowana, bo data już jest w kolumnie A
+  }
+
+  async publishWordPress(rowId: string): Promise<void> {
+    await this.updateCell(rowId, 'statusWP', 'Opublikowano');
+  }
+
+  async publishSocialMedia(rowId: string): Promise<void> {
+    await this.updateCell(rowId, 'statusSM', 'Opublikowano');
   }
 }
 
