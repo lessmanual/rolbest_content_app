@@ -202,6 +202,21 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
+  const getPublishStatus = (post: Post): string => {
+    const isWpPublished = post.statusWP === 'Opublikowano';
+    const isSmPublished = post.statusSM === 'Opublikowano';
+    
+    if (isWpPublished && isSmPublished) {
+      return 'OPUBLIKOWANO';
+    } else if (isWpPublished) {
+      return 'OPUBLIKOWANO NA WORDPRESS';
+    } else if (isSmPublished) {
+      return 'OPUBLIKOWANO NA SOCIAL MEDIA';
+    } else {
+      return 'OPUBLIKOWANE';
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Brak daty";
     try {
@@ -757,7 +772,7 @@ export default function Dashboard() {
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between mb-3">
                       <Badge variant="default" className="bg-green-100 text-green-800">
-                        OPUBLIKOWANE
+                        {getPublishStatus(post)}
                       </Badge>
                       <span className="text-xs text-rolbest-muted-foreground">
                         {formatDate(post.publishedDate)}
@@ -830,7 +845,7 @@ export default function Dashboard() {
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
               <Badge variant="default" className="bg-green-100 text-green-800">
-                OPUBLIKOWANE
+                {getPublishStatus(selectedPost)}
               </Badge>
               <span className="text-sm text-rolbest-muted-foreground" data-testid="text-modal-date">
                 {formatDate(selectedPost.publishedDate)}

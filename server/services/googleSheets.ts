@@ -101,10 +101,14 @@ export class GoogleSheetsService {
 
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (row[7] === 'Opublikowano') { // Column H is index 7 (Main Status)
+        const statusWP = row[8] || ''; // Column I - WordPress status
+        const statusSM = row[9] || ''; // Column J - Social Media status
+        
+        // Show posts that have 'Opublikowano' in at least one of the status columns
+        if (statusWP === 'Opublikowano' || statusSM === 'Opublikowano') {
           publishedPosts.push({
             rowId: `ROW_${i + 1}`,
-            status: row[7] as "Opublikowano",
+            status: "Opublikowano" as const,
             blogTitle: row[1] || '', // Column B - tytuł
             blogContent: row[2] || '', // Column C - Blog Wordpress text (for editing)
             blogContentHtml: row[3] || '', // Column D - Blog Wordpress HTML (for preview)
@@ -112,8 +116,8 @@ export class GoogleSheetsService {
             instagramContent: row[5] || '', // Column F - Post Instagram
             imageUrl: row[6] || '', // Column G - Grafika
             publishedDate: row[0] || '', // Column A - data
-            statusWP: row[8] || '', // Column I - WordPress status
-            statusSM: row[9] || '', // Column J - Social Media status
+            statusWP, // Column I - WordPress status
+            statusSM, // Column J - Social Media status
           });
         }
       }
