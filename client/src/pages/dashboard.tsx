@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [isFacebookExpanded, setIsFacebookExpanded] = useState(false);
   const [isInstagramExpanded, setIsInstagramExpanded] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tempWebhookUrl, setTempWebhookUrl] = useState('');
   const { toast } = useToast();
 
   // Fetch current post
@@ -51,6 +52,18 @@ export default function Dashboard() {
   const { data: publishedPosts = [], isLoading: isLoadingHistory } = useQuery<Post[]>({
     queryKey: ["/api/posts/published"],
   });
+
+  // Fetch webhook URL
+  const { data: webhookConfig } = useQuery<{webhookUrl: string}>({
+    queryKey: ["/api/webhook-url"],
+  });
+
+  // Update webhook URL when config loads
+  useEffect(() => {
+    if (webhookConfig?.webhookUrl && tempWebhookUrl === '') {
+      setTempWebhookUrl(webhookConfig.webhookUrl);
+    }
+  }, [webhookConfig, tempWebhookUrl]);
 
   // Update cell mutation
   const updateCellMutation = useMutation({
@@ -105,6 +118,28 @@ export default function Dashboard() {
       toast({
         title: "Błąd",
         description: "Nie udało się opublikować na WordPress",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update webhook URL mutation
+  const updateWebhookMutation = useMutation({
+    mutationFn: async (webhookUrl: string) => {
+      return apiRequest("POST", "/api/webhook-url", { webhookUrl });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sukces",
+        description: "URL webhooka został zaktualizowany!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/webhook-url"] });
+      setIsSettingsOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zaktualizować URL webhooka",
         variant: "destructive",
       });
     },
@@ -183,6 +218,10 @@ export default function Dashboard() {
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
     }
+  };
+
+  const handleUpdateWebhook = () => {
+    updateWebhookMutation.mutate(tempWebhookUrl);
   };
 
   const handlePublishSocial = () => {
@@ -926,11 +965,51 @@ export default function Dashboard() {
           </div>
 
           <div>
-            <h4 className="font-medium text-rolbest-foreground mb-4">Webhook Make.com</h4>
+            <h4 className="font-medium text-rolbest-foreground mb-4">Webhook WordPress</h4>
+            <div className="bg-rolbest-muted p-4 rounded-lg space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-rolbest-foreground">Publikacja WordPress</p>
+                  <p className="text-xs text-rolbest-muted-foreground">URL webhooka dla publikacji na WordPress</p>
+                </div>
+                <div className="flex items-center text-green-600">
+                  <Circle className="w-3 h-3 mr-2 fill-current" />
+                  <span className="text-sm">Skonfigurowany</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-rolbest-foreground mb-1 block">
+                    URL Webhooka
+                  </label>
+                  <Input
+                    placeholder="https://hook.eu2.make.com/..."
+                    value={tempWebhookUrl}
+                    onChange={(e) => setTempWebhookUrl(e.target.value)}
+                    className="text-sm"
+                    data-testid="input-webhook-url"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleUpdateWebhook}
+                    disabled={updateWebhookMutation.isPending}
+                    className="bg-rolbest-primary hover:bg-rolbest-primary/90"
+                    data-testid="button-update-webhook"
+                  >
+                    {updateWebhookMutation.isPending ? 'Zapisywanie...' : 'Zaktualizuj Webhook'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-rolbest-foreground mb-4">Webhook Social Media</h4>
             <div className="bg-rolbest-muted p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-rolbest-foreground">Publikacja automatyczna</p>
+                  <p className="text-sm font-medium text-rolbest-foreground">Publikacja Social Media</p>
                   <p className="text-xs text-rolbest-muted-foreground">Uruchamianie po kliknięciu "Opublikuj"</p>
                 </div>
                 <div className="flex items-center text-green-600">
