@@ -78,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       } else if (publishType === "wordpress") {
-        const wordpressWebhookUrl = await storage.getWebhookUrl();
+        const wordpressWebhookUrl = process.env.WORDPRESS_WEBHOOK_URL;
         const wordpressUsername = process.env.WORDPRESS_WEBHOOK_USERNAME;
         const wordpressPassword = process.env.WORDPRESS_WEBHOOK_PASSWORD;
         
@@ -131,34 +131,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(posts);
     } catch (error) {
       console.error("Error fetching published posts:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // GET /api/webhook-url - Get current WordPress webhook URL
-  app.get("/api/webhook-url", async (req, res) => {
-    try {
-      const webhookUrl = await storage.getWebhookUrl();
-      res.json({ webhookUrl: webhookUrl || '' });
-    } catch (error) {
-      console.error("Error getting webhook URL:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // POST /api/webhook-url - Set WordPress webhook URL
-  app.post("/api/webhook-url", async (req, res) => {
-    try {
-      const { webhookUrl } = req.body;
-      
-      if (typeof webhookUrl !== 'string') {
-        return res.status(400).json({ message: "Webhook URL must be a string" });
-      }
-      
-      await storage.setWebhookUrl(webhookUrl);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error setting webhook URL:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

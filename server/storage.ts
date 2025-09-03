@@ -5,13 +5,10 @@ export interface IStorage {
   getPublishedPosts(): Promise<Post[]>;
   updateCell(rowId: string, column: string, content: string): Promise<void>;
   publishPost(rowId: string): Promise<void>;
-  getWebhookUrl(): Promise<string | null>;
-  setWebhookUrl(url: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private posts: Map<string, Post>;
-  private webhookUrl: string | null = null;
 
   constructor() {
     this.posts = new Map();
@@ -39,14 +36,6 @@ export class MemStorage implements IStorage {
 
   async publishPost(rowId: string): Promise<void> {
     // No action needed for memory storage - Google Sheets is primary
-  }
-
-  async getWebhookUrl(): Promise<string | null> {
-    return this.webhookUrl || process.env.WORDPRESS_WEBHOOK_URL || null;
-  }
-
-  async setWebhookUrl(url: string): Promise<void> {
-    this.webhookUrl = url;
   }
 }
 
