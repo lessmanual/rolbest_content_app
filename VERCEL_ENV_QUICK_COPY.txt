@@ -1,0 +1,53 @@
+=============================================================================
+VERCEL ENVIRONMENT VARIABLES - GOTOWE DO WKLEJENIA
+=============================================================================
+
+INSTRUKCJA:
+1. Otwórz swój projekt w Replit i znajdź Secrets (ikona zamka)
+2. Skopiuj wartości z Replit Secrets i wklej poniżej
+3. Wejdź na Vercel Dashboard → Settings → Environment Variables
+4. Dodaj każdą zmienną osobno (Name + Value)
+5. Dla każdej zmiennej zaznacz: Production, Preview, Development
+
+=============================================================================
+
+ZMIENNE WYMAGANE (bez tych apka nie będzie działać):
+--------------------------------------------------------------------------
+
+Name: GOOGLE_SERVICE_ACCOUNT_CREDENTIALS
+Value: [WKLEJ TUTAJ JSON Z REPLIT SECRETS - całość w jednej linii]
+Environments: ☑ Production  ☑ Preview  ☑ Development
+
+Name: GOOGLE_SHEET_ID
+Value: [WKLEJ TUTAJ ID ARKUSZA]
+Environments: ☑ Production  ☑ Preview  ☑ Development
+
+=============================================================================
+
+ZMIENNE OPCJONALNE (webhooks - jeśli używasz):
+--------------------------------------------------------------------------
+
+Name: MAKE_WEBHOOK_URL
+Value: [WKLEJ TUTAJ URL WEBHOOKA MAKE.COM]
+Environments: ☑ Production  ☑ Preview  ☑ Development
+
+Name: WORDPRESS_WEBHOOK_URL
+Value: [WKLEJ TUTAJ URL WEBHOOKA WORDPRESS]
+Environments: ☑ Production  ☑ Preview  ☑ Development
+
+Name: WORDPRESS_WEBHOOK_USERNAME
+Value: [WKLEJ TUTAJ USERNAME]
+Environments: ☑ Production  ☑ Preview  ☑ Development
+
+Name: WORDPRESS_WEBHOOK_PASSWORD
+Value: [WKLEJ TUTAJ PASSWORD]
+Environments: ☑ Production  ☑ Preview  ☑ Development
+
+=============================================================================
+
+UWAGI:
+- NODE_ENV i PORT - NIE DODAWAJ, Vercel ustawia to automatycznie
+- DATABASE_URL - NIE JEST UŻYWANE w aplikacji, pomiń to
+- Po dodaniu zmiennych, kliknij "Redeploy" w zakładce Deployments
+
+=============================================================================

@@ -1,0 +1,11 @@
+node_modules
+.git
+.replit
+.config
+.local
+dist
+*.md
+DEPLOYMENT_*.md
+PROJECT_*.md
+VERCEL_*.md
+replit.md
