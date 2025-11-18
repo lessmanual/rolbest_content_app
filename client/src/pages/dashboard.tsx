@@ -90,7 +90,14 @@ export default function Dashboard() {
       formData.append('oldImageUrl', oldImageUrl || '');
       formData.append('fileName', file.name);
 
-      const response = await fetch('https://rolbest.app.n8n.cloud/webhook-test/ead810b5-3b14-4110-97b0-55e0d171518e', {
+      // Get webhook URL from environment variable
+      const webhookUrl = import.meta.env.VITE_N8N_IMAGE_UPLOAD_WEBHOOK;
+
+      if (!webhookUrl) {
+        throw new Error('N8N webhook URL not configured');
+      }
+
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
       });
