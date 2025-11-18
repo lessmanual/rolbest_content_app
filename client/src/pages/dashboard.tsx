@@ -16,21 +16,38 @@ import type { Post } from "@shared/schema";
 // Function to convert Google Drive share link to direct image link
 const convertGoogleDriveLink = (url: string): string => {
   if (!url) return '';
-  
+
   // Check if it's already a direct link
   if (url.includes('drive.google.com/uc?id=') || url.includes('drive.google.com/thumbnail?id=')) {
     return url;
   }
-  
+
   // Extract file ID from various Google Drive URL formats
   const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
   if (fileIdMatch) {
     // Use thumbnail endpoint which works better for public images
     return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1000`;
   }
-  
+
   // If no match found, return original URL
   return url;
+};
+
+// Function to convert plain text to HTML
+const convertTextToHtml = (text: string): string => {
+  if (!text) return '';
+
+  // Split by double line breaks to create paragraphs
+  const paragraphs = text.split(/\n\n+/);
+
+  return paragraphs
+    .map(para => {
+      // Replace single line breaks with <br>
+      const withBreaks = para.replace(/\n/g, '<br>');
+      // Wrap in paragraph tags
+      return `<p>${withBreaks}</p>`;
+    })
+    .join('\n');
 };
 
 export default function Dashboard() {
@@ -85,6 +102,7 @@ export default function Dashboard() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/published"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/archived"] });
     },
     onError: () => {
       toast({
@@ -107,6 +125,7 @@ export default function Dashboard() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/published"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/archived"] });
     },
     onError: () => {
       toast({
@@ -126,7 +145,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (currentPost) {
       setTempBlogTitle(currentPost.blogTitle || "");
-      setTempBlogContent(currentPost.blogContentHtml || "");
+      setTempBlogContent(currentPost.blogContent || ""); // Load plain text from column C
       setTempFacebookContent(currentPost.facebookContent || "");
       setTempInstagramContent(currentPost.instagramContent || "");
     }
@@ -140,23 +159,36 @@ export default function Dashboard() {
 
   const handleSaveChanges = () => {
     if (currentPost) {
-      // Save both title and content
-      updateCellMutation.mutate({ 
-        rowId: currentPost.rowId, 
-        column: "blogTitle", 
-        content: tempBlogTitle 
+      // Convert plain text to HTML
+      const htmlContent = convertTextToHtml(tempBlogContent);
+
+      // Save title
+      updateCellMutation.mutate({
+        rowId: currentPost.rowId,
+        column: "blogTitle",
+        content: tempBlogTitle
       });
-      updateCellMutation.mutate({ 
-        rowId: currentPost.rowId, 
-        column: "blogContentHtml", 
-        content: tempBlogContent 
+
+      // Save plain text to column C
+      updateCellMutation.mutate({
+        rowId: currentPost.rowId,
+        column: "blogContent",
+        content: tempBlogContent
       });
-      
+
+      // Save HTML version to column D
+      updateCellMutation.mutate({
+        rowId: currentPost.rowId,
+        column: "blogContentHtml",
+        content: htmlContent
+      });
+
       // Switch back to preview mode
       setIsBlogExpanded(false);
-      
+
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/archived"] });
     }
   };
 
@@ -201,6 +233,15 @@ export default function Dashboard() {
   const handlePublishWordPress = () => {
     if (currentPost) {
       publishWordPressMutation.mutate(currentPost.rowId);
+    }
+  };
+
+  // Generic publish handler for archive section
+  const handlePublish = (rowId: string, publishType: 'wordpress' | 'social-media') => {
+    if (publishType === 'wordpress') {
+      publishWordPressMutation.mutate(rowId);
+    } else {
+      publishSocialMutation.mutate(rowId);
     }
   };
 
