@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { googleSheetsService } from '@shared/googleSheets';
-import { publishSchema } from '@shared/schema';
+import { googleSheetsService } from '../shared/googleSheets.js';
+import { publishSchema } from '../shared/schema.js';
 import { z } from 'zod';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
