@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { googleSheetsService } from '../../server/services/googleSheets';
+import { googleSheetsService } from '../lib/googleSheets';
 import { updateCellSchema } from '../../shared/schema';
 import { z } from 'zod';
 
