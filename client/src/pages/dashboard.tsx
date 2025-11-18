@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Modal from "@/components/ui/modal";
 import { Settings, Upload, Rocket, Save, ExternalLink, Circle, ChevronDown, ChevronUp, Edit } from "lucide-react";
 import type { Post } from "@shared/schema";
@@ -50,6 +52,11 @@ export default function Dashboard() {
   // Fetch published posts
   const { data: publishedPosts = [], isLoading: isLoadingHistory } = useQuery<Post[]>({
     queryKey: ["/api/posts/published"],
+  });
+
+  // Fetch archived posts
+  const { data: archivedPosts = [], isLoading: isLoadingArchive } = useQuery<Post[]>({
+    queryKey: ["/api/posts/archived"],
   });
 
   // Update cell mutation
@@ -831,6 +838,127 @@ export default function Dashboard() {
                 </Card>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Archive Section */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-rolbest-foreground mb-2">📦 Archiwum</h2>
+              <p className="text-rolbest-muted-foreground">Niepublikowane posty z przeszłości</p>
+            </div>
+          </div>
+
+          {isLoadingArchive ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rolbest-primary mx-auto"></div>
+              <p className="mt-2 text-rolbest-muted-foreground">Ładowanie archiwum...</p>
+            </div>
+          ) : archivedPosts.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-rolbest-muted-foreground">
+                  Brak zarchiwizowanych postów do wyświetlenia.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Accordion type="single" collapsible className="w-full space-y-2">
+              {archivedPosts.map((post) => (
+                <AccordionItem key={post.rowId} value={post.rowId} className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex justify-between items-center w-full pr-4">
+                      <div className="flex items-center gap-3">
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                          Archiwum
+                        </Badge>
+                        <span className="font-medium text-left">{post.blogTitle || 'Bez tytułu'}</span>
+                      </div>
+                      <span className="text-sm text-rolbest-muted-foreground">
+                        {formatDate(post.publishedDate)}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-4 space-y-4">
+                      {/* Image Preview */}
+                      {post.imageUrl && (
+                        <img
+                          src={convertGoogleDriveLink(post.imageUrl)}
+                          alt="Post"
+                          className="w-full max-h-64 object-cover rounded-lg"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            const fileIdMatch = post.imageUrl?.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                            if (fileIdMatch && !target.src.includes('uc?id=')) {
+                              target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+                            }
+                          }}
+                        />
+                      )}
+
+                      {/* Content Tabs */}
+                      <Tabs defaultValue="blog" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="blog">Blog</TabsTrigger>
+                          <TabsTrigger value="facebook">Facebook</TabsTrigger>
+                          <TabsTrigger value="instagram">Instagram</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="blog" className="space-y-2">
+                          <Textarea
+                            value={post.blogContent || ''}
+                            readOnly
+                            rows={8}
+                            className="font-mono text-sm"
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="facebook" className="space-y-2">
+                          <Textarea
+                            value={post.facebookContent || ''}
+                            readOnly
+                            rows={6}
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="instagram" className="space-y-2">
+                          <Textarea
+                            value={post.instagramContent || ''}
+                            readOnly
+                            rows={6}
+                          />
+                        </TabsContent>
+                      </Tabs>
+
+                      {/* Publish Buttons */}
+                      <Card className="bg-muted/50">
+                        <CardContent className="pt-4">
+                          <h4 className="font-semibold mb-3">Publikuj:</h4>
+                          <div className="flex gap-3">
+                            <Button
+                              variant="default"
+                              disabled={post.statusWP === 'Opublikowano'}
+                              onClick={() => handlePublish(post.rowId, 'wordpress')}
+                            >
+                              {post.statusWP === 'Opublikowano' ? '✓ Opublikowano WP' : 'Opublikuj WordPress'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              disabled={post.statusSM === 'Opublikowano'}
+                              onClick={() => handlePublish(post.rowId, 'social-media')}
+                            >
+                              {post.statusSM === 'Opublikowano' ? '✓ Opublikowano SM' : 'Opublikuj Social Media'}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           )}
         </div>
       </div>

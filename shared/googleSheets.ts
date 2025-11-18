@@ -103,7 +103,7 @@ export class GoogleSheetsService {
         const row = rows[i];
         const statusWP = row[8] || ''; // Column I - WordPress status
         const statusSM = row[9] || ''; // Column J - Social Media status
-        
+
         // Show posts that have 'Opublikowano' in at least one of the status columns
         if (statusWP === 'Opublikowano' || statusSM === 'Opublikowano') {
           publishedPosts.push({
@@ -122,11 +122,77 @@ export class GoogleSheetsService {
         }
       }
 
-      return publishedPosts.sort((a, b) => 
+      return publishedPosts.sort((a, b) =>
         (b.publishedDate || "").localeCompare(a.publishedDate || "")
       );
     } catch (error) {
       console.error('Error fetching published posts:', error);
+      return [];
+    }
+  }
+
+  async getArchivedPosts(): Promise<Post[]> {
+    if (!this.sheets) return [];
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Artykuły!A:J', // Get data from "Artykuły" sheet, columns A to J
+      });
+
+      const rows = response.data.values;
+      if (!rows) return [];
+
+      // Get today's date at midnight for comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const archivedPosts: Post[] = [];
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const dateStr = row[0] || ''; // Column A - data
+        const statusWP = row[8] || ''; // Column I - WordPress status
+        const statusSM = row[9] || ''; // Column J - Social Media status
+
+        // Skip if no date
+        if (!dateStr) continue;
+
+        // Parse date DD-MM-YYYY
+        const dateParts = dateStr.split('-');
+        if (dateParts.length !== 3) continue;
+
+        const [day, month, year] = dateParts.map(Number);
+        const postDate = new Date(year, month - 1, day);
+        postDate.setHours(0, 0, 0, 0);
+
+        // Check: past date AND not published (both statuses must not be 'Opublikowano')
+        const isPast = postDate < today;
+        const notPublished = statusWP !== 'Opublikowano' && statusSM !== 'Opublikowano';
+
+        if (isPast && notPublished) {
+          archivedPosts.push({
+            rowId: `ROW_${i + 1}`,
+            status: "Archiwum" as const,
+            blogTitle: row[1] || '', // Column B - tytuł
+            blogContent: row[2] || '', // Column C - Blog Wordpress text (for editing)
+            blogContentHtml: row[3] || '', // Column D - Blog Wordpress HTML (for preview)
+            facebookContent: row[4] || '', // Column E - Post Facebook
+            instagramContent: row[5] || '', // Column F - Post Instagram
+            imageUrl: row[6] || '', // Column G - Grafika
+            publishedDate: dateStr, // Column A - data
+            statusWP, // Column I - WordPress status
+            statusSM, // Column J - Social Media status
+          });
+        }
+      }
+
+      // Sort DESC (newest first)
+      return archivedPosts.sort((a, b) =>
+        (b.publishedDate || "").localeCompare(a.publishedDate || "")
+      );
+    } catch (error) {
+      console.error('Error fetching archived posts:', error);
       return [];
     }
   }
