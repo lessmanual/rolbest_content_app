@@ -76,6 +76,50 @@ export default function Dashboard() {
     queryKey: ["/api/posts/archived"],
   });
 
+  // Upload image mutation (n8n webhook)
+  const uploadImageMutation = useMutation({
+    mutationFn: async ({ rowId, oldImageUrl, file }: { rowId: string; oldImageUrl: string; file: File }) => {
+      const formData = new FormData();
+
+      // Extract row number from rowId (e.g., "ROW_5" -> 5)
+      const rowNumber = parseInt(rowId.replace('ROW_', ''));
+
+      formData.append('file', file);
+      formData.append('rowId', rowId);
+      formData.append('row_number', rowNumber.toString());
+      formData.append('oldImageUrl', oldImageUrl || '');
+      formData.append('fileName', file.name);
+
+      const response = await fetch('https://rolbest.app.n8n.cloud/webhook-test/ead810b5-3b14-4110-97b0-55e0d171518e', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sukces",
+        description: "Zdjęcie zostało zaktualizowane",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/post"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/published"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/archived"] });
+    },
+    onError: (error) => {
+      console.error('Image upload error:', error);
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zaktualizować zdjęcia",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Update cell mutation
   const updateCellMutation = useMutation({
     mutationFn: async ({ rowId, column, content }: { rowId: string; column: string; content: string }) => {
@@ -245,6 +289,35 @@ export default function Dashboard() {
     }
   };
 
+  // Handle image upload
+  const handleImageUpload = (rowId: string, oldImageUrl: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Błąd",
+        description: "Dozwolone formaty: JPG, PNG, WEBP",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Błąd",
+        description: "Maksymalny rozmiar pliku to 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    uploadImageMutation.mutate({ rowId, oldImageUrl, file });
+  };
+
   const openModal = (post: Post) => {
     setSelectedPost(post);
     setIsModalOpen(true);
@@ -320,11 +393,11 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Loading indicator */}
-        {(updateCellMutation.isPending || publishSocialMutation.isPending || publishWordPressMutation.isPending) && (
+        {(updateCellMutation.isPending || publishSocialMutation.isPending || publishWordPressMutation.isPending || uploadImageMutation.isPending) && (
           <div className="fixed top-4 right-4 bg-rolbest-primary text-white px-4 py-2 rounded-lg shadow-lg z-50">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Synchronizacja z Google Sheets...
+              {uploadImageMutation.isPending ? 'Wysyłanie zdjęcia...' : 'Synchronizacja z Google Sheets...'}
             </div>
           </div>
         )}
@@ -690,10 +763,35 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
-                    <Button variant="outline" className="w-full" data-testid="button-change-image">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Zmień zdjęcie
-                    </Button>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="current-post-image-upload"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => handleImageUpload(currentPost.rowId, currentPost.imageUrl || '', e)}
+                        disabled={uploadImageMutation.isPending}
+                      />
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        data-testid="button-change-image"
+                        onClick={() => document.getElementById('current-post-image-upload')?.click()}
+                        disabled={uploadImageMutation.isPending}
+                      >
+                        {uploadImageMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                            Wysyłanie...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Zmień zdjęcie
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -924,20 +1022,53 @@ export default function Dashboard() {
                   <AccordionContent>
                     <div className="pt-4 space-y-4">
                       {/* Image Preview */}
-                      {post.imageUrl && (
-                        <img
-                          src={convertGoogleDriveLink(post.imageUrl)}
-                          alt="Post"
-                          className="w-full max-h-64 object-cover rounded-lg"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const fileIdMatch = post.imageUrl?.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
-                            if (fileIdMatch && !target.src.includes('uc?id=')) {
-                              target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
-                            }
-                          }}
-                        />
-                      )}
+                      <div className="space-y-2">
+                        {post.imageUrl && (
+                          <img
+                            src={convertGoogleDriveLink(post.imageUrl)}
+                            alt="Post"
+                            className="w-full max-h-64 object-cover rounded-lg"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const fileIdMatch = post.imageUrl?.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                              if (fileIdMatch && !target.src.includes('uc?id=')) {
+                                target.src = `https://drive.google.com/uc?id=${fileIdMatch[1]}`;
+                              }
+                            }}
+                          />
+                        )}
+
+                        {/* Change Image Button */}
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id={`archive-image-upload-${post.rowId}`}
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(post.rowId, post.imageUrl || '', e)}
+                            disabled={uploadImageMutation.isPending}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => document.getElementById(`archive-image-upload-${post.rowId}`)?.click()}
+                            disabled={uploadImageMutation.isPending}
+                          >
+                            {uploadImageMutation.isPending ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                                Wysyłanie...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-4 h-4 mr-2" />
+                                {post.imageUrl ? 'Zmień zdjęcie' : 'Dodaj zdjęcie'}
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
 
                       {/* Content Tabs */}
                       <Tabs defaultValue="blog" className="w-full">
