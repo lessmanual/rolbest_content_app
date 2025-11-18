@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { IncomingForm, File } from 'formidable';
+import { IncomingForm } from 'formidable';
 import FormData from 'form-data';
 import fs from 'fs';
+import axios from 'axios';
 
 // Disable body parsing, we'll use formidable
 export const config = {
@@ -14,6 +15,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
+
+  let uploadedFilePath: string | null = null;
 
   try {
     // Parse the multipart form data
@@ -35,13 +38,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
+    uploadedFilePath = uploadedFile.filepath;
+
     // Get other form fields
     const rowId = Array.isArray(fields.rowId) ? fields.rowId[0] : fields.rowId;
     const row_number = Array.isArray(fields.row_number) ? fields.row_number[0] : fields.row_number;
     const oldImageUrl = Array.isArray(fields.oldImageUrl) ? fields.oldImageUrl[0] : fields.oldImageUrl;
     const fileName = Array.isArray(fields.fileName) ? fields.fileName[0] : fields.fileName;
 
-    // Create form data for n8n webhook
+    console.log('Processing upload:', {
+      fileName,
+      fileSize: uploadedFile.size,
+      mimeType: uploadedFile.mimetype,
+      rowId,
+      row_number
+    });
+
+    // Create form data for n8n webhook using axios
     const formData = new FormData();
     formData.append('file', fs.createReadStream(uploadedFile.filepath), {
       filename: fileName || uploadedFile.originalFilename || 'image.jpg',
@@ -59,30 +72,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ message: 'N8N webhook URL not configured' });
     }
 
-    // Forward to n8n webhook
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      body: formData as any,
-      headers: formData.getHeaders(),
+    console.log('Forwarding to n8n webhook...');
+
+    // Forward to n8n webhook using axios (better multipart support than fetch)
+    const response = await axios.post(webhookUrl, formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
     });
 
     // Clean up temporary file
-    fs.unlinkSync(uploadedFile.filepath);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('N8N webhook error:', errorText);
-      return res.status(response.status).json({
-        message: 'Failed to upload to n8n',
-        error: errorText
-      });
+    if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+      fs.unlinkSync(uploadedFilePath);
     }
 
-    const result = await response.json();
-    res.json(result);
+    console.log('Upload successful:', response.data);
+
+    res.json(response.data);
 
   } catch (error) {
     console.error('Upload error:', error);
+
+    // Clean up temporary file on error
+    if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+      try {
+        fs.unlinkSync(uploadedFilePath);
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
+    }
+
+    if (axios.isAxiosError(error)) {
+      return res.status(error.response?.status || 500).json({
+        message: 'Failed to upload to n8n',
+        error: error.response?.data || error.message
+      });
+    }
+
     res.status(500).json({
       message: 'Internal server error',
       error: error instanceof Error ? error.message : 'Unknown error'
