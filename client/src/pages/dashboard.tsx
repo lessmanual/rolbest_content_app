@@ -103,11 +103,19 @@ export default function Dashboard() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Parse n8n response: [{ row_number: 89, Grafika: "https://..." }]
+      const responseItem = Array.isArray(data) ? data[0] : data;
+      const newImageUrl = responseItem?.Grafika;
+
       toast({
         title: "Sukces",
-        description: "Zdjęcie zostało zaktualizowane",
+        description: newImageUrl
+          ? "Zdjęcie zostało zaktualizowane i zapisane w Google Drive"
+          : "Zdjęcie zostało zaktualizowane",
       });
+
+      // Refresh all data to show new image
       queryClient.invalidateQueries({ queryKey: ["/api/post"] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/published"] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/archived"] });
