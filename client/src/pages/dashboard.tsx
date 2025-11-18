@@ -76,7 +76,7 @@ export default function Dashboard() {
     queryKey: ["/api/posts/archived"],
   });
 
-  // Upload image mutation (n8n webhook)
+  // Upload image mutation (via Vercel API proxy to n8n)
   const uploadImageMutation = useMutation({
     mutationFn: async ({ rowId, oldImageUrl, file }: { rowId: string; oldImageUrl: string; file: File }) => {
       const formData = new FormData();
@@ -90,20 +90,15 @@ export default function Dashboard() {
       formData.append('oldImageUrl', oldImageUrl || '');
       formData.append('fileName', file.name);
 
-      // Get webhook URL from environment variable
-      const webhookUrl = import.meta.env.VITE_N8N_IMAGE_UPLOAD_WEBHOOK;
-
-      if (!webhookUrl) {
-        throw new Error('N8N webhook URL not configured');
-      }
-
-      const response = await fetch(webhookUrl, {
+      // Call Vercel API endpoint (which forwards to n8n)
+      const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+        throw new Error(errorData.message || 'Failed to upload image');
       }
 
       return response.json();
